@@ -1,6 +1,6 @@
 import { Global, css } from '@emotion/react';
 import variables from './variable';
-import { breakpoints } from '../utils/config';
+import { breakpoints } from '@/utils/config';
 
 const GlobalStyles = () => (
   <Global
@@ -34,6 +34,21 @@ const GlobalStyles = () => (
 
         @media (min-width: ${breakpoints.desktop}px) {
           padding: 0 200px;
+        }
+      }
+
+      h1 {
+        font-size: var(--fz-heading-small);
+
+        @media (min-width: ${breakpoints.mobile}px) {
+          font-size: var(--fz-heading);
+        }
+      }
+
+      h2 {
+        font-size: var(--fz-xl);
+        @media (min-width: ${breakpoints.mobile}px) {
+          font-size: var(--fz-heading-small);
         }
       }
     `}

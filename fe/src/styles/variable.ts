@@ -16,6 +16,8 @@ const variables = css`
     --green-tint: rgba(100, 255, 218, 0.1);
     --pink: #f57dff;
     --blue: #57cbff;
+    --red: #ff6b6b;
+    --dark-red: #e63946;
 
     --font-sans: 'Calibre', 'Inter', 'San Francisco', 'SF Pro Text',
       -apple-system, system-ui, sans-serif;
@@ -30,6 +32,8 @@ const variables = css`
     --fz-xxl: 22px;
     --fz-heading-small: 24px;
     --fz-heading: 32px;
+
+    --border-radius: 8px;
   }
 `;
 
