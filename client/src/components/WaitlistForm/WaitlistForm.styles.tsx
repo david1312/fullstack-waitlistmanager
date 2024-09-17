@@ -1,3 +1,4 @@
+import { breakpoints } from '@/utils/config';
 import styled from '@emotion/styled';
 
 export const Overlay = styled.div`
@@ -6,7 +7,8 @@ export const Overlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--dark-navy);
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  backdrop-filter: blur(8px); /* Apply blur effect */
   z-index: 1000;
 `;
 
@@ -19,7 +21,14 @@ export const FormContainer = styled.div`
   padding: 20px 40px;
   border-radius: var(--border-radius);
   z-index: 1001;
-  min-width: 480px;
+  min-width: 260px;
+  @media (min-width: ${breakpoints.mobile}px) {
+    min-width: 360px;
+  }
+
+  @media (min-width: ${breakpoints.tablet}px) {
+    min-width: 480px;
+  }
 
   h2 {
     text-align: center;
@@ -44,6 +53,12 @@ export const FormContainer = styled.div`
     margin-top: 5px;
     margin-bottom: 15px;
     box-sizing: border-box;
+
+    &:hover,
+    &:focus {
+      border-color: var(--green); /* Green border on hover and focus */
+      outline-color: var(--green); /* Remove default outline */
+    }
   }
 `;
 
@@ -74,4 +89,5 @@ export const ErrorMessage = styled.p`
   font-size: 0.9rem;
   margin-top: -10px;
   margin-bottom: 15px;
+  height: 30px;
 `;

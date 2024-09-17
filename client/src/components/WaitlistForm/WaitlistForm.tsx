@@ -1,40 +1,53 @@
-import { useState } from 'react';
 import { FormContainer, Overlay, ErrorMessage } from './WaitlistForm.styles';
-import { Button } from '../Button/Button.styles';
+import Button from '@/components/Button/Button';
+import { ERROR_VALIDATION, WAITLIST_CONFIG } from '@/utils/config';
+import { useState } from 'react';
+import { useQueueContext } from '@/hooks/useQueueContext';
 
 interface WaitlistFormProps {
   onClose: () => void;
 }
 
 const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
-  const [name, setName] = useState('');
-  const [partySize, setPartySize] = useState('');
+  const { name, partySize, setName, setPartySize, setIsSubmitted } =
+    useQueueContext();
   const [nameError, setNameError] = useState<string | null>(null);
   const [partySizeError, setPartySizeError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     let valid = true;
 
     if (!name.trim()) {
-      setNameError('Please enter a name.');
+      setNameError(ERROR_VALIDATION.NAME);
       valid = false;
     } else {
       setNameError(null);
     }
 
-    if (!partySize || parseInt(partySize) < 1) {
-      setPartySizeError('Please enter a valid party size of at least 1.');
+    if (!partySize || partySize < 1) {
+      setPartySizeError(ERROR_VALIDATION.PARTY_SIZE);
       valid = false;
     } else {
       setPartySizeError(null);
     }
-
     if (!valid) return;
-
-    console.log({ name, partySize });
+    setIsSubmitted(true);
     onClose(); // Close form after submission
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (e.target.value.trim()) {
+      setNameError(null);
+    }
+  };
+
+  const handlePartySizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPartySize(parseInt(e.target.value));
+    if (parseInt(e.target.value) >= 1) {
+      setPartySizeError(null);
+    }
   };
 
   return (
@@ -50,29 +63,22 @@ const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
+              maxLength={WAITLIST_CONFIG.MAX_LENGTH_NAME}
             />
-            {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
+            <ErrorMessage>{nameError}</ErrorMessage>
 
             <label htmlFor="partySize">Party Size:</label>
             <input
               id="partySize"
               type="number"
-              value={partySize}
-              onChange={(e) => setPartySize(e.target.value)}
+              value={partySize || ''}
+              onChange={handlePartySizeChange}
               min={1}
+              max={WAITLIST_CONFIG.MAX_PARTY_SIZE}
             />
-            {partySizeError && <ErrorMessage>{partySizeError}</ErrorMessage>}
-
-            <Button
-              type="submit"
-              variant="join"
-              onClick={() => {
-                console.log('hello');
-              }}
-            >
-              Join Waitlist
-            </Button>
+            <ErrorMessage>{partySizeError}</ErrorMessage>
+            <Button variant="join">Join Waitlist</Button>
           </fieldset>
         </form>
       </FormContainer>

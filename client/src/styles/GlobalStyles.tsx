@@ -9,16 +9,10 @@ const GlobalStyles = () => (
 
       ${variables}
       scroll-behavior: smooth;
-      :root {
-        --foreground-rgb: var(--slate);
-        --background-start-rgb: var(--light-navy);
-        --background-end-rgb: var(--navy);
-      }
-
       body {
         margin: 0;
         font-family: var(--font-sans);
-        color: var(--foreground-rgb);
+        color: var(--slate);
         background-color: var(--navy);
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
@@ -27,7 +21,6 @@ const GlobalStyles = () => (
 
       main {
         padding: 0 30px;
-
         @media (min-width: ${breakpoints.tablet}px) {
           padding: 0 150px;
         }
@@ -39,7 +32,6 @@ const GlobalStyles = () => (
 
       h1 {
         font-size: var(--fz-heading-small);
-
         @media (min-width: ${breakpoints.mobile}px) {
           font-size: var(--fz-heading);
         }

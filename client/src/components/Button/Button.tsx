@@ -7,7 +7,7 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-const Button: React.FC<ButtonProps> = ({ variant, children, onClick }) => {
+const Button = ({ variant, children, onClick }: ButtonProps) => {
   return (
     <StyledButton variant={variant} onClick={onClick}>
       {children}
