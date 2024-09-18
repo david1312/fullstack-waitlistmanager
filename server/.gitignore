@@ -1,0 +1,35 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.env
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+logs/*
+
+# Runtime data
+pids
+*.pid
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dist directory after compiling TypeScript
+dist/
+
+# Editor specific files
+.DS_Store
+.vscode/
+
+# Jest coverage files
+/coverage
+
+# Mongo data
+mongo-data
