@@ -15,9 +15,9 @@ export const ModalContainer = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: white;
+  background-color: var(--white);
   padding: 20px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   z-index: 1001;
 `;
 
@@ -31,7 +31,7 @@ export const ModalContent = styled.div`
     background-color: var(--red);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     cursor: pointer;
   }
 `;

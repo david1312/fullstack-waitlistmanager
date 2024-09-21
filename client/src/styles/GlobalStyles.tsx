@@ -43,6 +43,16 @@ const GlobalStyles = () => (
           font-size: var(--fz-heading-small);
         }
       }
+
+      p {
+        font-size: var(--fz-xs);
+        @media (min-width: ${breakpoints.mobile}px) {
+          font-size: var(--fz-sm);
+        }
+        @media (min-width: ${breakpoints.tablet}px) {
+          font-size: var(--fz-md);
+        }
+      }
     `}
   />
 );

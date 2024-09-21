@@ -8,10 +8,12 @@ interface QueueItem {
 }
 
 interface QueueContextProps {
+  sessionId: string;
   name: string;
   partySize: number;
   queue: QueueItem[];
   isSubmitted: boolean;
+  setSessionId: (sessionId: string) => void;
   setName: (name: string) => void;
   setPartySize: (size: number) => void;
   setIsSubmitted: (value: boolean) => void;
@@ -22,6 +24,13 @@ interface QueueContextProps {
 const QueueContext = createContext<QueueContextProps | undefined>(undefined);
 
 const QueueProvider = ({ children }: { children: React.ReactNode }) => {
+  const [sessionId, setSessionId] = useState<string>(() => {
+    const sessionData = JSON.parse(
+      sessionStorage.getItem('queueSession') || '{}',
+    );
+    return sessionData.sessionId || '';
+  });
+
   const [name, setName] = useState<string>(() => {
     const sessionData = JSON.parse(
       sessionStorage.getItem('queueSession') || '{}',
@@ -54,12 +63,19 @@ const QueueProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     sessionStorage.setItem(
       'queueSession',
-      JSON.stringify({ name, partySize, queue, isSubmitted }),
+      JSON.stringify({
+        sessionId,
+        name,
+        partySize,
+        queue,
+        isSubmitted,
+      }),
     );
-  }, [name, partySize, queue, isSubmitted]);
+  }, [sessionId, name, partySize, queue, isSubmitted]);
 
   const clearSession = () => {
     sessionStorage.removeItem('queueSession');
+    setSessionId('');
     setName('');
     setPartySize(0);
     setQueue([]);
@@ -69,10 +85,12 @@ const QueueProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueueContext.Provider
       value={{
+        sessionId,
         name,
         partySize,
         queue,
         isSubmitted,
+        setSessionId,
         setName,
         setPartySize,
         setQueue,

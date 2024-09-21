@@ -24,7 +24,7 @@ class SocketSingleton {
   }
 
   // Allow emitting to specific session IDs
-  static emitToSession(sessionId: string, event: string, data: any) {
+  static emitToSession(sessionId: string, event: string, data?: any) {
     const io = SocketSingleton.getInstance();
     io.to(sessionId).emit(event, data);
   }

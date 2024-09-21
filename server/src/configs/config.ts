@@ -15,6 +15,9 @@ export const config: Readonly<{
   NOTIF_FIRST_LATE: number;
   NOTIF_REQUEUE: number;
   REQUEUE_CHANCE: number;
+
+  MAX_LENGTH_NAME: number;
+  MAX_PARTY_SIZE: number;
 }> = {
   POSTGRES_USER: process.env.POSTGRES_USER || "",
   POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD || "",
@@ -30,6 +33,9 @@ export const config: Readonly<{
   NOTIF_FIRST_LATE: 10, // seconds
   NOTIF_REQUEUE: 20, // seconds
   REQUEUE_CHANCE: 1,
+
+  MAX_LENGTH_NAME: 30,
+  MAX_PARTY_SIZE: 10,
 };
 
 interface NotificationMsg {

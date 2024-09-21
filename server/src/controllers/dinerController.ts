@@ -1,21 +1,17 @@
 import { Request, Response } from "express";
 import DinerModel from "../models/Diner";
-import { Server } from "socket.io";
 import { config, NOTIFICATION_MSG } from "../configs/config";
-import { DinerJoinWaitlistPayload } from "../types/ws-event";
 import { ErrorResponse, SuccessResponse } from "../types/response";
+import SocketSingleton from "../configs/socket";
 interface JoinWaitlistBody {
   sessionId: string;
   name: string;
   partySize: number;
 }
 
-const activeTimers = new Map<string, NodeJS.Timeout>();
-
 export const joinWaitlist = async (
   req: Request<{}, {}, JoinWaitlistBody>, // Typed Request body
-  res: Response<SuccessResponse | ErrorResponse>,
-  io: Server
+  res: Response<SuccessResponse | ErrorResponse>
 ) => {
   const { sessionId, name, partySize } = req.body;
 
@@ -23,9 +19,11 @@ export const joinWaitlist = async (
   if (
     !sessionId ||
     !name ||
+    name.length > config.MAX_LENGTH_NAME ||
     !partySize ||
     isNaN(Number(partySize)) ||
-    partySize <= 0
+    partySize <= 0 ||
+    partySize > config.MAX_PARTY_SIZE
   ) {
     return res.status(400).json({ error: "Invalid input" });
   }
@@ -52,35 +50,22 @@ export const joinWaitlist = async (
 
     // Emit WebSocket event
     console.log(queueDiners);
-    io.emit("dinerJoinWaitlist", {
+    SocketSingleton.emit("dinerJoinWaitlist", {
       queueDiners,
       availableSeats,
       maxCapacity: config.RESTAURANT_CAPACITY,
     });
 
-    console.log({
-      a: queueDiners[0].session_id,
-      b: sessionId,
-      c: availableSeats,
-      partySize,
-    });
     if (
       queueDiners.length > 0 &&
       queueDiners[0].session_id === sessionId &&
       availableSeats >= partySize
     ) {
-      io.to(sessionId).emit("dinerYourTurn");
-      io.to(sessionId).emit("dinerNotification", {
+      SocketSingleton.emitToSession(sessionId, "dinerYourTurn");
+      SocketSingleton.emitToSession(sessionId, "dinerNotification", {
         message: NOTIFICATION_MSG.YOUR_TURN,
       });
-
-      console.log("this guy triggering ", name, partySize);
-    } else {
-      console.log("this guy should waiting", name, partySize);
     }
-
-    io.emit("babi", { asukontol: sessionId });
-
     res.sendStatus(200);
   } catch (error) {
     console.error("error addWaitlist:", error);

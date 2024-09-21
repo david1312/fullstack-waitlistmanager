@@ -31,5 +31,5 @@ dist/
 # Jest coverage files
 /coverage
 
-# Mongo data
-mongo-data
+# database local data
+postgres-data

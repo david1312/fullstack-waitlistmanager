@@ -18,12 +18,13 @@ export const FormContainer = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: var(--light-navy);
-  padding: 20px 40px;
+  padding: 10px 20px;
   border-radius: var(--border-radius);
   z-index: 1001;
   min-width: 260px;
   @media (min-width: ${breakpoints.mobile}px) {
     min-width: 360px;
+    padding: 20px 40px;
   }
 
   @media (min-width: ${breakpoints.tablet}px) {
@@ -39,9 +40,10 @@ export const FormContainer = styled.div`
   }
 
   fieldset {
-    border: 2px solid var(--green); /* Add green border to fieldset */
+    border: 2px solid var(--green);
     padding: 20px;
     border-radius: var(--border-radius);
+    min-width: 260px;
   }
   legend {
     color: var(--green);
@@ -53,34 +55,13 @@ export const FormContainer = styled.div`
     margin-top: 5px;
     margin-bottom: 15px;
     box-sizing: border-box;
+    font-size: var(--fz-md);
 
     &:hover,
     &:focus {
       border-color: var(--green); /* Green border on hover and focus */
       outline-color: var(--green); /* Remove default outline */
     }
-  }
-`;
-
-export const Button = styled.button`
-  margin-top: 12px;
-  color: var(--green);
-  background-color: transparent;
-  border: 1px solid var(--green);
-  border-radius: var(--border-radius);
-  padding: 0.75rem 1rem;
-  font-size: var(--fz-sm);
-  font-family: var(--font-mono);
-  line-height: 1;
-  text-decoration: none;
-  transition: var(--transition);
-  width: 100%;
-
-  &:hover,
-  &:focus-visible {
-    outline: none;
-    box-shadow: 3px 3px 0 0 var(--green);
-    transform: translate(4px, -4px);
   }
 `;
 

@@ -5,8 +5,8 @@ import { joinWaitlist } from "../controllers/dinerController";
 
 const router = Router();
 
-export const createDinerRoutes = (io: Server) => {
-  router.post("/join-waitlist", (req, res) => joinWaitlist(req, res, io));
+export const createDinerRoutes = () => {
+  router.post("/join-waitlist", (req, res) => joinWaitlist(req, res));
   return router;
 };
 

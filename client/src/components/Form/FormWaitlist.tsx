@@ -1,18 +1,22 @@
-import { FormContainer, Overlay, ErrorMessage } from './WaitlistForm.styles';
+import { FormContainer, Overlay, ErrorMessage } from './FormWaitlist.styles';
 import Button from '@/components/Button/Button';
 import { ERROR_VALIDATION, WAITLIST_CONFIG } from '@/utils/config';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQueueContext } from '@/hooks/useQueueContext';
+import { v4 as uuidv4 } from 'uuid';
 
-interface WaitlistFormProps {
-  onClose: () => void;
-}
-
-const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
-  const { name, partySize, setName, setPartySize, setIsSubmitted } =
-    useQueueContext();
+const WaitlistForm = () => {
+  const {
+    name,
+    partySize,
+    setName,
+    setPartySize,
+    setIsSubmitted,
+    setSessionId,
+  } = useQueueContext();
   const [nameError, setNameError] = useState<string | null>(null);
   const [partySizeError, setPartySizeError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +36,8 @@ const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
       setPartySizeError(null);
     }
     if (!valid) return;
+    setSessionId(uuidv4());
     setIsSubmitted(true);
-    onClose(); // Close form after submission
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +54,13 @@ const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
     }
   };
 
+  useEffect(() => {
+    // Focus the name input on component mount
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, []);
+
   return (
     <>
       <Overlay />
@@ -65,6 +76,7 @@ const WaitlistForm = ({ onClose }: WaitlistFormProps) => {
               value={name}
               onChange={handleNameChange}
               maxLength={WAITLIST_CONFIG.MAX_LENGTH_NAME}
+              ref={nameInputRef}
             />
             <ErrorMessage>{nameError}</ErrorMessage>
 

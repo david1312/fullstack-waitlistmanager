@@ -1,7 +1,7 @@
 import Database from "../configs/db";
 import { PoolClient } from "pg";
-import { ErrorResponse } from "../types/response";
 
+type DinerStatus = "queue" | "diner";
 interface CheckInResponse {
   session_id: string;
   name: string;
@@ -16,18 +16,22 @@ interface QueueDinerResponse {
   queue_time: Date;
 }
 
-interface Diner {
+interface AddDinerProps {
   session_id: string;
   name: string;
   party_size: number;
-  status: "queue" | "diner";
-  check_in_time?: Date;
+  status: DinerStatus;
   queue_time: Date;
   service_time: number;
 }
 
+interface UpdateQueueTimeProps {
+  session_id: string;
+  queue_time: Date;
+  queue_counter: number;
+}
 class DinerModel {
-  static async addDiner(diner: Diner) {
+  static async addDiner(diner: AddDinerProps) {
     const db = Database.getInstance();
     const query = `
           INSERT INTO diners (session_id, name, party_size, status, queue_time, service_time)
@@ -49,7 +53,7 @@ class DinerModel {
     }
   }
 
-  static async checkSessionIdExist(session_id: string): Promise<boolean> {
+  static async checkSessionIdExist(sessionId: string): Promise<boolean> {
     const db = Database.getInstance();
     const query = `
       SELECT EXISTS (
@@ -60,7 +64,7 @@ class DinerModel {
     `;
 
     try {
-      const result = await db.query(query, [session_id]);
+      const result = await db.query(query, [sessionId]);
       return result.rows[0].exists; // `exists` will be true if a row was found, false otherwise
     } catch (error) {
       throw new Error(`Error checkSessionIdExist: ${error}`);
@@ -93,6 +97,57 @@ class DinerModel {
       return parseInt(result.rows[0].total_party_size || "0", 10);
     } catch (error) {
       throw new Error(`Error getTotalCheckedInPartySize: ${error}`);
+    }
+  }
+
+  //
+
+  static async updateQueueTime(payload: UpdateQueueTimeProps) {
+    const db = Database.getInstance();
+    const query = `
+          UPDATE diners set queue_time = $1, queue_counter = $2
+          where session_id = $3
+        `;
+    const values = [
+      payload.queue_time,
+      payload.queue_counter,
+      payload.session_id,
+    ];
+
+    try {
+      await db.query(query, values);
+    } catch (error) {
+      throw new Error(`Error updateQueueTime: ${error}`);
+    }
+  }
+
+  static async getQueueCounter(sessionId: string): Promise<number | null> {
+    const db = Database.getInstance();
+    const query = `
+      SELECT queue_counter 
+      FROM diners 
+      WHERE session_id = $1
+    `;
+
+    try {
+      const result = await db.query(query, [sessionId]);
+      if (result.rows.length === 0) {
+        return null; // No diner found with this session_id
+      }
+      return result.rows[0].queue_counter; // Return the queue_counter
+    } catch (error) {
+      throw new Error(`Error getQueueCounter: ${error}`);
+    }
+  }
+
+  static async deleteDiner(sessionId: string) {
+    const db = Database.getInstance();
+    const query = `DELETE FROM diners WHERE session_id = $1`;
+
+    try {
+      await db.query(query, [sessionId]);
+    } catch (error) {
+      throw new Error(`Error deleteDiner: ${error}`);
     }
   }
 
