@@ -1,3 +1,13 @@
+interface AppConfig {
+  BASE_URL: string;
+  TIMEOUT: number;
+}
+
+export const API_CONFIG: Readonly<AppConfig> = {
+  BASE_URL: import.meta.env.API_BASE_URL || 'http://localhost:8080',
+  TIMEOUT: parseInt(import.meta.env.API_TIMEOUT || '5000', 10), // 5 seconds default
+};
+
 interface Breakpoints {
   mobile: number;
   tablet: number;
@@ -46,4 +56,20 @@ export const NOTIFICATION_MSG: Readonly<NotificationMsg> = {
   REQUEUE: 'Your check-in time expired. You’ve been re-added to the queue.',
   KICKED:
     'You missed your second chance to check in. You’ve been removed from the queue.',
+};
+
+export const GUIDANCE_LIST: string[] = [
+  `You can check in once your party's turn in the queue arrives. The 'Check-in' button will appear.`,
+  `You have 20 seconds to check in. If you miss it, you'll be requeued once, and removed if it happens again.`,
+  `You'll be notified when one party is ahead and when it's your turn to check in.`,
+];
+
+interface ErrCode {
+  UNAUTHORIZED: string;
+  INTERNAL_SERVER_ERROR: string;
+}
+
+export const ERROR_CODE: Readonly<ErrCode> = {
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
 };

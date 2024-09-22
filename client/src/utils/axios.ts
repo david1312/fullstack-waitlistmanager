@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { API_CONFIG } from './config';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.API_BASE_URL || 'http://localhost:8080',
-  timeout: 5000, // Set a timeout
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

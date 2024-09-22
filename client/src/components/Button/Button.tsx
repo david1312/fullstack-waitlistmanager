@@ -9,7 +9,7 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-const Button = ({
+const Button: React.FC<ButtonProps> = ({
   variant,
   children,
   onClick,

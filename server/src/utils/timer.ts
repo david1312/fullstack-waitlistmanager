@@ -5,16 +5,26 @@ export const startTimer = (
   sessionId: string,
   duration: number,
   onComplete: () => void,
+  clearTimerBefore: boolean = false,
   onTick: (timeLeft: number) => void = () => {}
 ) => {
-  // Check if a timer is already running for this session prevent reset time
+  // Check if there's an active timer
   if (activeTimers.has(sessionId)) {
-    console.log(
-      `Timer already running for session: ${sessionId}, continuing existing timer...`
-    );
-    return;
+    if (!clearTimerBefore) {
+      // If not clearing the timer, return and continue the existing timer
+      console.log(
+        `Timer already running for session: ${sessionId}, continuing existing timer...`
+      );
+      return;
+    } else {
+      // Clear the existing timer if clearTimerBefore is true
+      clearInterval(activeTimers.get(sessionId));
+      activeTimers.delete(sessionId);
+      console.log(`Clearing previous timer for session: ${sessionId}`);
+    }
   }
 
+  // Initialize timeLeft with the duration for the new timer
   let timeLeft = duration;
 
   // Set the interval timer
@@ -23,20 +33,13 @@ export const startTimer = (
     onTick(timeLeft); // Call the onTick callback with the remaining time
 
     if (timeLeft <= 0) {
-      onComplete();
-      clearInterval(timer);
-      activeTimers.delete(sessionId);
-      // Call the onComplete callback when the timer finishes
+      onComplete(); // Call the onComplete callback when the timer finishes
+      clearInterval(timer); // Clear the interval when the timer is done
+      activeTimers.delete(sessionId); // Remove the timer from activeTimers
     }
   }, 1000); // Fire every second
 
+  // Store the new timer in the activeTimers map
   activeTimers.set(sessionId, timer);
-};
-
-// Stop the timer for a specific session
-export const stopTimer = (sessionId: string) => {
-  if (activeTimers.has(sessionId)) {
-    clearTimeout(activeTimers.get(sessionId)!);
-    activeTimers.delete(sessionId);
-  }
+  console.log(`Starting new timer for session: ${sessionId}`);
 };

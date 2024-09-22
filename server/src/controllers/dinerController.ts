@@ -1,20 +1,23 @@
 import { Request, Response } from "express";
 import DinerModel from "../models/Diner";
-import { config, NOTIFICATION_MSG } from "../configs/config";
+import { config, ERROR_CODE, NOTIFICATION_MSG } from "../configs/config";
 import { ErrorResponse, SuccessResponse } from "../types/response";
-import SocketSingleton from "../configs/socket";
-interface JoinWaitlistBody {
+import SocketClient from "../configs/socket";
+interface JoinWaitlistPayload {
   sessionId: string;
   name: string;
   partySize: number;
 }
 
+interface CheckinPayload {
+  sessionId: string;
+}
+
 export const joinWaitlist = async (
-  req: Request<{}, {}, JoinWaitlistBody>, // Typed Request body
+  req: Request<{}, {}, JoinWaitlistPayload>,
   res: Response<SuccessResponse | ErrorResponse>
 ) => {
   const { sessionId, name, partySize } = req.body;
-
   // Validation
   if (
     !sessionId ||
@@ -25,11 +28,13 @@ export const joinWaitlist = async (
     partySize <= 0 ||
     partySize > config.MAX_PARTY_SIZE
   ) {
-    return res.status(400).json({ error: "Invalid input" });
+    return res
+      .status(400)
+      .json({ error: "Invalid input", errorCode: ERROR_CODE.UNAUTHORIZED });
   }
 
   try {
-    // check session id exist
+    // Check session id exist to handle refresh on client side
     const sessionIdExist = await DinerModel.checkSessionIdExist(sessionId);
     if (!sessionIdExist) {
       console.log("session Id does not exists, inserting new diner...");
@@ -39,36 +44,77 @@ export const joinWaitlist = async (
         party_size: partySize,
         status: "queue",
         queue_time: new Date(),
-        service_time: partySize * config.SERVICE_TIME_PER_PERSON, // Example: 30 minutes for dining
+        service_time: partySize * config.SERVICE_TIME_PER_PERSON,
       });
     }
 
-    // collect data for emit websocket event
+    // collect data before emit event to client
     const queueDiners = await DinerModel.getAllQueueDiners();
     const checkedInPartySize = await DinerModel.getTotalCheckedInPartySize();
     const availableSeats = config.RESTAURANT_CAPACITY - checkedInPartySize;
 
-    // Emit WebSocket event
-    console.log(queueDiners);
-    SocketSingleton.emit("dinerJoinWaitlist", {
+    SocketClient.emit("dinerUpdateQueueList", {
       queueDiners,
       availableSeats,
-      maxCapacity: config.RESTAURANT_CAPACITY,
+      isFirstRowRemoved: false,
     });
-
     if (
       queueDiners.length > 0 &&
-      queueDiners[0].session_id === sessionId &&
-      availableSeats >= partySize
+      availableSeats >= partySize &&
+      sessionId === queueDiners[0].session_id
     ) {
-      SocketSingleton.emitToSession(sessionId, "dinerYourTurn");
-      SocketSingleton.emitToSession(sessionId, "dinerNotification", {
-        message: NOTIFICATION_MSG.YOUR_TURN,
-      });
+      SocketClient.emitToSession(queueDiners[0].session_id, "dinerYourTurn");
+      SocketClient.emitToSession(
+        queueDiners[0].session_id,
+        "dinerNotification",
+        {
+          message: NOTIFICATION_MSG.YOUR_TURN,
+        }
+      );
     }
     res.sendStatus(200);
   } catch (error) {
     console.error("error addWaitlist:", error);
-    res.status(500).json({ error: "Error joining the waitlist" });
+    res.status(500).json({
+      error: "Error joining the waitlist",
+      errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
+export const checkinDiner = async (
+  req: Request<{}, {}, CheckinPayload>,
+  res: Response<SuccessResponse | ErrorResponse>
+) => {
+  const { sessionId } = req.body;
+  if (!sessionId) {
+    return res
+      .status(400)
+      .json({ error: "Invalid input", errorCode: ERROR_CODE.BAD_REQUEST });
+  }
+
+  try {
+    // Check session id exist to handle refresh on client side
+    const checkinResult = await DinerModel.checkInDiner(sessionId);
+    // collect data before emit event to client
+    const queueDiners = await DinerModel.getAllQueueDiners();
+    SocketClient.emit("dinerUpdateQueueList", {
+      queueDiners,
+      availableSeats: checkinResult.available_seat,
+      isFirstRowRemoved: false,
+    });
+
+    // info checkin success here
+    SocketClient.emitToSession(sessionId, "dinerCheckinSuccess", {
+      serviceTime: checkinResult.service_time,
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("error checkinDiner:", error);
+    res.status(500).json({
+      error: "Error checkin diner",
+      errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR,
+    });
   }
 };

@@ -6,7 +6,6 @@ const GlobalStyles = () => (
   <Global
     styles={css`
       /* Mobile first approach */
-
       ${variables}
       scroll-behavior: smooth;
       body {
@@ -44,13 +43,24 @@ const GlobalStyles = () => (
         }
       }
 
+      h3 {
+        font-size: var(--fz-md);
+        @media (min-width: ${breakpoints.mobile}px) {
+          font-size: var(--fz-xl);
+        }
+      }
+
       p {
         font-size: var(--fz-xs);
         @media (min-width: ${breakpoints.mobile}px) {
           font-size: var(--fz-sm);
         }
-        @media (min-width: ${breakpoints.tablet}px) {
-          font-size: var(--fz-md);
+      }
+
+      span {
+        font-size: var(--fz-xxs);
+        @media (min-width: ${breakpoints.mobile}px) {
+          font-size: var(--fz-sm);
         }
       }
     `}

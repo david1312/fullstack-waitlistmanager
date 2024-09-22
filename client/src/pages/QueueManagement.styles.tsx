@@ -32,6 +32,10 @@ export const QueueSection = styled.section`
   }
 `;
 
+export const HiddenAudioButton = styled.button`
+  display: none;
+`;
+
 export const QueueContainer = styled.div`
   width: 100%;
   padding: 20px;
@@ -40,13 +44,12 @@ export const QueueContainer = styled.div`
   border-radius: var(--border-radius);
   height: calc(100vh - 150px);
   overflow-y: auto;
-  h1 {
-    line-height: 1;
-  }
 
+  h1,
   p,
-  h2 {
-    line-height: 0.8;
+  h2,
+  h3 {
+    line-height: 1;
   }
 
   ul {
@@ -59,19 +62,19 @@ export const QueueContainer = styled.div`
     font-size: var(--fz-xs);
   }
 
-  @media (min-width: ${breakpoints.mobile}px) {
-    p,
-    h2 {
-      line-height: 1;
-    }
-    li {
-      font-size: var(--fz-sm);
-    }
+  span {
+    display: block;
+    text-align: center;
   }
 
-  @media (min-width: ${breakpoints.tablet}px) {
+  .span-title {
+    color: var(--blue);
+    font-weight: bold;
+  }
+
+  @media (min-width: ${breakpoints.mobile}px) {
     li {
-      font-size: var(--fz-md);
+      font-size: var(--fz-sm);
     }
   }
 `;

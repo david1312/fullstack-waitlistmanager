@@ -5,10 +5,10 @@ export interface QueueDiner {
   queue_time: Date;
 }
 
-export interface DinerJoinWaitlistPayload {
+export interface DinerUpdateQueueListPayload {
   queueDiners: QueueDiner[];
   availableSeats: number;
-  maxCapacity: number;
+  isFirstRowRemoved?: boolean;
 }
 
 export interface DinerYourTurnPayload {

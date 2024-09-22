@@ -25,11 +25,14 @@ const useApi = <T, B = unknown>() => {
 
         setResponse({ isSuccess: true, data: res.data || null });
       } catch (err: unknown) {
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.error
-          : 'Unknown error';
+        console.log({ err });
+        const isAxiosError = axios.isAxiosError(err);
 
-        setResponse({ isSuccess: false, error: errorMessage });
+        setResponse({
+          isSuccess: false,
+          error: isAxiosError ? err.response?.data?.error : 'Unknown error',
+          errorCode: isAxiosError ? err.response?.data?.errorCode : '',
+        });
       } finally {
         setLoading(false); // Ensure loading is false whether success or failure
       }

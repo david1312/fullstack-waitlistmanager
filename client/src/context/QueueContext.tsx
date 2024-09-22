@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useEffect, useState } from 'react';
 
 interface QueueItem {
   position: number;
@@ -73,14 +73,14 @@ const QueueProvider = ({ children }: { children: React.ReactNode }) => {
     );
   }, [sessionId, name, partySize, queue, isSubmitted]);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     sessionStorage.removeItem('queueSession');
     setSessionId('');
     setName('');
     setPartySize(0);
     setQueue([]);
     setIsSubmitted(false);
-  };
+  }, []);
 
   return (
     <QueueContext.Provider

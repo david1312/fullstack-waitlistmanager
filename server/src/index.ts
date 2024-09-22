@@ -11,7 +11,7 @@ import WSClient from "./configs/socket";
 const app = express();
 const server = http.createServer(app);
 
-// Database Connection
+// Database initialization
 Database.connect();
 
 // Websocket initialization
@@ -21,11 +21,11 @@ WSClient.initialize(server);
 setupWebSocketServer();
 
 // Middleware
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(express.json());
 app.use(requestLogger);
 
-// Use the queue routes
+// routes list
 app.use(config.API_BASE_URL, createDinerRoutes());
 
 // Start Server

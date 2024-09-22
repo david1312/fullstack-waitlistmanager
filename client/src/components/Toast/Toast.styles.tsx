@@ -13,7 +13,6 @@ const toastStyle = {
 };
 interface ToastContainerProps {
   variant: ToastVariant;
-  isVisible: boolean;
 }
 
 export const ToastContainer = styled.div<ToastContainerProps>`
@@ -31,8 +30,7 @@ export const ToastContainer = styled.div<ToastContainerProps>`
   text-align: center; /* Optionally center the text */
   min-width: 260px;
   opacity: 0;
-  animation: ${({ isVisible }) =>
-    isVisible ? 'fadeIn 0.5s ease forwards' : 'fadeOut 0.5s ease forwards'};
+  animation: fadeIn 0.5s ease forwards;
 
   @keyframes fadeIn {
     from {
@@ -42,17 +40,6 @@ export const ToastContainer = styled.div<ToastContainerProps>`
     to {
       opacity: 1;
       transform: translate(-50%, 15px);
-    }
-  }
-
-  @keyframes fadeOut {
-    from {
-      opacity: 1;
-      transform: translate(-50%, 15px);
-    }
-    to {
-      opacity: 0;
-      transform: translate(-50%, 0);
     }
   }
 `;

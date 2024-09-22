@@ -75,7 +75,7 @@ const WaitlistForm = () => {
               type="text"
               value={name}
               onChange={handleNameChange}
-              maxLength={WAITLIST_CONFIG.MAX_LENGTH_NAME}
+              maxLength={50}
               ref={nameInputRef}
             />
             <ErrorMessage>{nameError}</ErrorMessage>
