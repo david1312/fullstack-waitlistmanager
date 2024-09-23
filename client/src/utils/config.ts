@@ -1,11 +1,23 @@
+interface Endpoints {
+  JOINWAITLIST: string;
+  CHECKIN: string;
+  LEAVE: string;
+}
+
 interface AppConfig {
   BASE_URL: string;
   TIMEOUT: number;
+  ENDPOINTS: Endpoints;
 }
 
 export const API_CONFIG: Readonly<AppConfig> = {
   BASE_URL: import.meta.env.API_BASE_URL || 'http://localhost:8080',
   TIMEOUT: parseInt(import.meta.env.API_TIMEOUT || '5000', 10), // 5 seconds default
+  ENDPOINTS: {
+    JOINWAITLIST: '/api/join-waitlist',
+    CHECKIN: '/api/checkin',
+    LEAVE: '/api/leave/:sessionId',
+  },
 };
 
 interface Breakpoints {

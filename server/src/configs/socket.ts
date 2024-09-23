@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import http from "http";
 import { config } from "./config";
+import { EventPayloadMap } from "../types/ws-event";
 
 class SocketClient {
   private static instance: Server | null = null;
@@ -15,6 +16,15 @@ class SocketClient {
     return SocketClient.instance;
   }
 
+  static async shutdown() {
+    if (SocketClient.instance) {
+      console.log("Closing WebSocket connections...");
+      SocketClient.instance.close(() => {
+        console.log("WebSocket server closed.");
+      });
+    }
+  }
+
   // Get the instance
   static getInstance() {
     if (!SocketClient.instance) {
@@ -26,13 +36,20 @@ class SocketClient {
   }
 
   // Allow emitting to specific session IDs
-  static emitToSession(sessionId: string, event: string, data?: any) {
+  static emitToSession<K extends keyof EventPayloadMap>(
+    sessionId: string,
+    event: K,
+    data?: EventPayloadMap[K]
+  ) {
     const io = SocketClient.getInstance();
     io.to(sessionId).emit(event, data);
   }
 
-  // Use for general broadcasts
-  static emit(event: string, data: any) {
+  // Emit to all clients with typed payload
+  static emit<K extends keyof EventPayloadMap>(
+    event: K,
+    data?: EventPayloadMap[K]
+  ) {
     const io = SocketClient.getInstance();
     io.emit(event, data);
   }

@@ -3,13 +3,14 @@ import DinerModel from "../models/Diner";
 import { config, ERROR_CODE, NOTIFICATION_MSG } from "../configs/config";
 import { ErrorResponse, SuccessResponse } from "../types/response";
 import SocketClient from "../configs/socket";
+import { DinerService } from "../services/DinerService";
 interface JoinWaitlistPayload {
   sessionId: string;
   name: string;
   partySize: number;
 }
 
-interface CheckinPayload {
+interface SessionIdPayload {
   sessionId: string;
 }
 
@@ -32,7 +33,6 @@ export const joinWaitlist = async (
       .status(400)
       .json({ error: "Invalid input", errorCode: ERROR_CODE.UNAUTHORIZED });
   }
-
   try {
     // Check session id exist to handle refresh on client side
     const sessionIdExist = await DinerModel.checkSessionIdExist(sessionId);
@@ -47,30 +47,13 @@ export const joinWaitlist = async (
         service_time: partySize * config.SERVICE_TIME_PER_PERSON,
       });
     }
-
-    // collect data before emit event to client
-    const queueDiners = await DinerModel.getAllQueueDiners();
-    const checkedInPartySize = await DinerModel.getTotalCheckedInPartySize();
-    const availableSeats = config.RESTAURANT_CAPACITY - checkedInPartySize;
-
-    SocketClient.emit("dinerUpdateQueueList", {
-      queueDiners,
-      availableSeats,
-      isFirstRowRemoved: false,
-    });
-    if (
-      queueDiners.length > 0 &&
-      availableSeats >= partySize &&
-      sessionId === queueDiners[0].session_id
-    ) {
-      SocketClient.emitToSession(queueDiners[0].session_id, "dinerYourTurn");
-      SocketClient.emitToSession(
-        queueDiners[0].session_id,
-        "dinerNotification",
-        {
-          message: NOTIFICATION_MSG.YOUR_TURN,
-        }
-      );
+    // Updating queue list data across clients
+    const result = await DinerService.updateQueueList(false);
+    if (sessionId === result.queueDiners[0].session_id) {
+      await DinerService.sendNotifCheckinTurn({
+        availableSeats: result.availableSeats,
+        queueDiners: result.queueDiners,
+      });
     }
     res.sendStatus(200);
   } catch (error) {
@@ -83,37 +66,69 @@ export const joinWaitlist = async (
 };
 
 export const checkinDiner = async (
-  req: Request<{}, {}, CheckinPayload>,
+  req: Request<{}, {}, SessionIdPayload>,
   res: Response<SuccessResponse | ErrorResponse>
 ) => {
   const { sessionId } = req.body;
   if (!sessionId) {
     return res
       .status(400)
-      .json({ error: "Invalid input", errorCode: ERROR_CODE.BAD_REQUEST });
+      .json({ error: "Invalid Session Id", errorCode: ERROR_CODE.BAD_REQUEST });
   }
 
   try {
-    // Check session id exist to handle refresh on client side
     const checkinResult = await DinerModel.checkInDiner(sessionId);
-    // collect data before emit event to client
-    const queueDiners = await DinerModel.getAllQueueDiners();
-    SocketClient.emit("dinerUpdateQueueList", {
-      queueDiners,
-      availableSeats: checkinResult.available_seat,
-      isFirstRowRemoved: false,
+    const result = await DinerService.updateQueueList(true);
+    // notify next party if their next turn
+    await DinerService.sendNotifCheckinTurn({
+      availableSeats: result.availableSeats,
+      queueDiners: result.queueDiners,
     });
 
-    // info checkin success here
-    SocketClient.emitToSession(sessionId, "dinerCheckinSuccess", {
-      serviceTime: checkinResult.service_time,
-    });
-
+    // notif checkin success
+    SocketClient.emitToSession(
+      sessionId,
+      "dinerCheckinSuccess",
+      checkinResult.service_time
+    );
     res.sendStatus(200);
   } catch (error) {
     console.error("error checkinDiner:", error);
     res.status(500).json({
-      error: "Error checkin diner",
+      error: "Error when checkin diner",
+      errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
+export const leaveQueue = async (
+  req: Request<SessionIdPayload>,
+  res: Response<SuccessResponse | ErrorResponse>
+) => {
+  const { sessionId } = req.params;
+  if (!sessionId) {
+    return res
+      .status(400)
+      .json({ error: "Invalid Session Id", errorCode: ERROR_CODE.BAD_REQUEST });
+  }
+  try {
+    await DinerModel.deleteDiner(sessionId);
+
+    // notify next party immediately if next
+    const result = await DinerService.updateQueueList(true);
+    // notify next party if their next turn
+    await DinerService.sendNotifCheckinTurn({
+      availableSeats: result.availableSeats,
+      queueDiners: result.queueDiners,
+    });
+
+    // notif leave success
+    SocketClient.emitToSession(sessionId, "dinerLeaveSuccess");
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("error leaving waitlist:", error);
+    res.status(500).json({
+      error: "Error when leaving waitlist",
       errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR,
     });
   }

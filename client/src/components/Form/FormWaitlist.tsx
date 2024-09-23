@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQueueContext } from '@/hooks/useQueueContext';
 import { v4 as uuidv4 } from 'uuid';
 
-const WaitlistForm = () => {
+const WaitlistForm: React.FC = () => {
   const {
     name,
     partySize,
@@ -75,7 +75,7 @@ const WaitlistForm = () => {
               type="text"
               value={name}
               onChange={handleNameChange}
-              maxLength={50}
+              maxLength={WAITLIST_CONFIG.MAX_LENGTH_NAME}
               ref={nameInputRef}
             />
             <ErrorMessage>{nameError}</ErrorMessage>
@@ -90,7 +90,7 @@ const WaitlistForm = () => {
               max={WAITLIST_CONFIG.MAX_PARTY_SIZE}
             />
             <ErrorMessage>{partySizeError}</ErrorMessage>
-            <Button variant="join">Join Waitlist</Button>
+            <Button variant="primary">Join Waitlist</Button>
           </fieldset>
         </form>
       </FormContainer>

@@ -2,17 +2,11 @@ import Database from "../configs/db";
 import { PoolClient } from "pg";
 import { Diner } from "../types/schema";
 import { config } from "../configs/config";
+import { QueueDinerResponse } from "../types/response";
 
 type DinerStatus = "queue" | "diner";
 
-interface QueueDinerResponse {
-  session_id: string;
-  name: string;
-  party_size: number;
-  queue_time: Date;
-}
-
-interface AddDinerProps {
+interface AddDinerPayload {
   session_id: string;
   name: string;
   party_size: number;
@@ -21,25 +15,17 @@ interface AddDinerProps {
   service_time: number;
 }
 
-interface UpdateQueueTimeProps {
+interface UpdateQueueTimePayload {
   session_id: string;
   queue_time: Date;
   queue_counter: number;
 }
 
-interface QueueDinerResponse {
-  session_id: string;
-  name: string;
-  party_size: number;
-  queue_time: Date;
-}
-
 interface CheckInResponse {
   service_time: number;
-  available_seat: number;
 }
 class DinerModel {
-  static async addDiner(diner: AddDinerProps) {
+  static async addDiner(diner: AddDinerPayload) {
     const db = Database.getInstance();
     const query = `
           INSERT INTO diners (session_id, name, party_size, status, queue_time, service_time)
@@ -108,9 +94,7 @@ class DinerModel {
     }
   }
 
-  //
-
-  static async updateQueueTime(payload: UpdateQueueTimeProps) {
+  static async updateQueueTime(payload: UpdateQueueTimePayload) {
     const db = Database.getInstance();
     const query = `
           UPDATE diners set queue_time = $1, queue_counter = $2
@@ -148,7 +132,8 @@ class DinerModel {
     }
   }
 
-  static async deleteDiner(sessionId: string) {
+  // Handle deletion when remove from queue automatically
+  static async deleteDinerOnQueue(sessionId: string) {
     const db = Database.getInstance();
     const client: PoolClient = await db.connect(); // Use client for transactions
 
@@ -191,25 +176,22 @@ class DinerModel {
       await client.query("COMMIT"); // Commit transaction
     } catch (error) {
       await client.query("ROLLBACK"); // Rollback transaction on error
-      throw new Error(`Error deleting diner: ${error}`);
+      throw new Error(`Error deleteDinerOnQueue: ${error}`);
     } finally {
       client.release(); // Release the client back to the pool
     }
   }
 
-  // Check-in a diner by updating their status with a transaction
-
   static async checkInDiner(session_id: string): Promise<CheckInResponse> {
     const db = Database.getInstance();
     const client: PoolClient = await db.connect(); // Get a client for transactions
-
     try {
-      await client.query("BEGIN"); // Start transaction
+      await client.query("BEGIN");
 
       // Lock the row for this diner to prevent concurrent updates
       const dinerResult = await client.query(
         `
-        SELECT *
+        SELECT party_size
         FROM diners 
         WHERE session_id = $1 
         FOR UPDATE
@@ -254,13 +236,26 @@ class DinerModel {
       await client.query("COMMIT"); // Commit transaction
       return {
         service_time: parseInt(updateResult.rows[0].service_time || "0", 10),
-        available_seat: availableSeat,
       };
     } catch (error) {
       await client.query("ROLLBACK"); // Rollback transaction on error
       throw new Error(`Error checkInDiner: ${error}`);
     } finally {
       client.release(); // Release the client back to the pool
+    }
+  }
+
+  // handle deletion after checkin & on leave waitlist
+  static async deleteDiner(sessionId: string) {
+    const db = Database.getInstance();
+    const query = `
+          DELETE FROM diners  
+          WHERE session_id = $1
+        `;
+    try {
+      await db.query(query, [sessionId]);
+    } catch (error) {
+      throw new Error(`Error deleteDiner: ${error}`);
     }
   }
 }

@@ -22,47 +22,47 @@ interface QueueContextProps {
 }
 
 const QueueContext = createContext<QueueContextProps | undefined>(undefined);
+const SESSION_STORAGE_KEY = 'queueSession'; // Using session storage to persist data accross tab
 
 const QueueProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessionId, setSessionId] = useState<string>(() => {
     const sessionData = JSON.parse(
-      sessionStorage.getItem('queueSession') || '{}',
+      sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}',
     );
     return sessionData.sessionId || '';
   });
 
   const [name, setName] = useState<string>(() => {
     const sessionData = JSON.parse(
-      sessionStorage.getItem('queueSession') || '{}',
+      sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}',
     );
     return sessionData.name || '';
   });
 
   const [partySize, setPartySize] = useState<number>(() => {
     const sessionData = JSON.parse(
-      sessionStorage.getItem('queueSession') || '{}',
+      sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}',
     );
     return sessionData.partySize || 0;
   });
 
   const [queue, setQueue] = useState<QueueItem[]>(() => {
     const sessionData = JSON.parse(
-      sessionStorage.getItem('queueSession') || '{}',
+      sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}',
     );
     return sessionData.queue || [];
   });
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(() => {
     return (
-      JSON.parse(sessionStorage.getItem('queueSession') || '{}').isSubmitted ||
-      false
+      JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY) || '{}')
+        .isSubmitted || false
     );
   });
 
-  // Save all data to session storage whenever any value changes
   useEffect(() => {
     sessionStorage.setItem(
-      'queueSession',
+      SESSION_STORAGE_KEY,
       JSON.stringify({
         sessionId,
         name,
@@ -74,7 +74,7 @@ const QueueProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sessionId, name, partySize, queue, isSubmitted]);
 
   const clearSession = useCallback(() => {
-    sessionStorage.removeItem('queueSession');
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
     setSessionId('');
     setName('');
     setPartySize(0);

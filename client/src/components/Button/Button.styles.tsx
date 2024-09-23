@@ -6,20 +6,20 @@ interface ButtonProps {
 }
 
 const buttonStyles = {
-  join: {
+  primary: {
     color: 'var(--green)',
     borderColor: 'var(--green)',
     hoverColor: 'var(--green)',
   },
-  leave: {
-    color: 'var(--dark-red)',
-    borderColor: 'var(--dark-red)',
-    hoverColor: 'var(--dark-red)',
-  },
-  checkin: {
+  secondary: {
     color: 'var(--blue)',
     borderColor: 'var(--blue)',
     hoverColor: 'var(--blue)',
+  },
+  danger: {
+    color: 'var(--dark-red)',
+    borderColor: 'var(--dark-red)',
+    hoverColor: 'var(--dark-red)',
   },
 };
 

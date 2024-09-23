@@ -1,101 +1,80 @@
 import { config, NOTIFICATION_MSG } from "../configs/config";
 import SocketClient from "../configs/socket";
 import DinerModel from "../models/Diner";
-import { startTimer } from "../utils/timer";
-
-interface DinerStartService {
-  serviceTime: number;
-}
+import { DinerService } from "../services/DinerService";
+import { startTimer, stopTimer } from "../utils/timer";
 
 export const setupWebSocketServer = () => {
   const io = SocketClient.getInstance();
 
   io.on("connection", (socket) => {
     const sessionId = socket.handshake.query.sessionId as string;
-
     if (!sessionId) {
       console.log("Session ID not provided. Disconnecting client...");
       socket.disconnect();
       return;
     }
-
     console.log(`New client connected with Session ID: ${sessionId}`);
     socket.join(sessionId);
 
-    // handle your turn checkin
-
+    // handler dinner turn for checkin
     socket.on("dinnerCheckinAvailable", async () => {
-      const queueCounter = await DinerModel.getQueueCounter(sessionId);
       startTimer(
         sessionId,
         config.NOTIF_REQUEUE,
         async () => {
-          let message = NOTIFICATION_MSG.REQUEUE;
-          let isRemoved = false;
-          console.log("complete timer");
+          try {
+            const queueCounter = await DinerModel.getQueueCounter(sessionId);
+            let isRemoved =
+              (queueCounter && queueCounter >= config.REQUEUE_CHANCE) || false;
+            let message = isRemoved
+              ? NOTIFICATION_MSG.KICKED
+              : NOTIFICATION_MSG.REQUEUE;
 
-          if (queueCounter && queueCounter >= config.REQUEUE_CHANCE) {
-            message = NOTIFICATION_MSG.KICKED;
-            isRemoved = true;
-            await DinerModel.deleteDiner(sessionId);
-            console.log(
-              `requeue chance maximum reached, session ID: ${sessionId} removed from queue`
-            );
-          } else {
-            await DinerModel.updateQueueTime({
-              queue_counter: 1,
-              queue_time: new Date(),
-              session_id: sessionId,
+            if (isRemoved) {
+              await DinerModel.deleteDinerOnQueue(sessionId);
+              console.log(
+                `Requeue chance max reached, session ID: ${sessionId} removed`
+              );
+            } else {
+              await DinerModel.updateQueueTime({
+                queue_counter: queueCounter ? queueCounter + 1 : 1,
+                queue_time: new Date(),
+                session_id: sessionId,
+              });
+            }
+
+            const result = await DinerService.updateQueueList(true);
+            // notify next party if their next turn
+            await DinerService.sendNotifCheckinTurn({
+              availableSeats: result.availableSeats,
+              queueDiners: result.queueDiners,
             });
-          }
 
-          const queueDiners = await DinerModel.getAllQueueDiners();
-          const checkedInPartySize =
-            await DinerModel.getTotalCheckedInPartySize();
-          const availableSeats =
-            config.RESTAURANT_CAPACITY - checkedInPartySize;
-
-          SocketClient.emit("dinerUpdateQueueList", {
-            queueDiners,
-            availableSeats,
-            isFirstRowRemoved: true,
-          });
-          console.log({ queueDiners });
-          // notify next turn party queue
-          if (
-            queueDiners.length > 0 &&
-            availableSeats >= queueDiners[0].party_size
-          ) {
-            SocketClient.emitToSession(
-              queueDiners[0].session_id,
-              "dinerYourTurn"
-            );
-            SocketClient.emitToSession(
-              queueDiners[0].session_id,
-              "dinerNotification",
-              {
-                message: NOTIFICATION_MSG.YOUR_TURN,
-              }
-            );
-          }
-          // only send this if first dinner queue get rotated
-          if (
-            (queueDiners.length > 0 &&
-              queueDiners[0].session_id !== sessionId) ||
-            queueDiners.length === 0
-          ) {
-            SocketClient.emitToSession(sessionId, "dinerCheckinExpired");
+            // Send notif to rotated / kicked queue
+            if (
+              (result.queueDiners.length > 0 &&
+                result.queueDiners[0].session_id !== sessionId) ||
+              result.queueDiners.length === 0
+            ) {
+              SocketClient.emitToSession(sessionId, "dinerCheckinExpired");
+              SocketClient.emitToSession(sessionId, "dinerNotification", {
+                message: message,
+                isRemoved: isRemoved,
+                isWarning: isRemoved,
+              });
+            }
+          } catch (error) {
+            console.error("Error when trigger checkin timer:", error);
+            // Optional: You could send an error back to the client, or handle it in another way
             SocketClient.emitToSession(sessionId, "dinerNotification", {
-              message: message,
-              isRemoved: isRemoved,
+              message: "Error when trigger checkin timer",
+              isWarning: true,
             });
-            // }
           }
-          // if()
         },
         false,
         (timeLeft) => {
-          console.log(timeLeft);
           SocketClient.emitToSession(sessionId, "dinerTimer", timeLeft);
           if (timeLeft === config.NOTIF_FIRST_LATE)
             SocketClient.emitToSession(sessionId, "dinerNotification", {
@@ -105,20 +84,33 @@ export const setupWebSocketServer = () => {
       );
     });
 
-    socket.on("dinerStartService", async (data: DinerStartService) => {
-      console.log("dinerStartService", data);
+    socket.on("dinerStartService", async (serviceTime: number) => {
       startTimer(
         sessionId,
-        data.serviceTime,
+        serviceTime,
         async () => {
-          console.log("complete");
+          try {
+            await DinerModel.deleteDiner(sessionId);
+            console.log(
+              `Party ${sessionId} completed the service,deleted successfully.`
+            );
+
+            const result = await DinerService.updateQueueList(false);
+            await DinerService.sendNotifCheckinTurn({
+              availableSeats: result.availableSeats,
+              queueDiners: result.queueDiners,
+            });
+          } catch (error) {
+            console.error("Error deleting diner:", error);
+            // Optional: You could send an error back to the client, or handle it in another way
+            SocketClient.emitToSession(sessionId, "dinerNotification", {
+              message: "Error when delete diner",
+              isWarning: true,
+            });
+          }
         },
-        true,
-        (timeLeft) => {
-          console.log(timeLeft);
-        }
+        true
       );
-      console.log("babais");
     });
 
     // Handle disconnection

@@ -7,20 +7,32 @@ import {
 } from './QueueManagement.styles';
 import Button from '@/components/Button/Button';
 import Toast from '@/components/Toast/Toast';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import WaitlistForm from '@/components/Form/FormWaitlist';
+import ModalSuccess from '@/components/Modal/ModalSuccess';
+import ModalConfirm from '@/components/Modal/ModalConfirm';
 import {
   DinerNotificationPayload,
   DinerUpdateQueueListPayload,
   QueueDiner,
 } from '@/types/ws';
-import { JoinWaitlistPayload, APIResponse, CheckinPayload } from '@/types/api';
+import {
+  JoinWaitlistPayload,
+  APIResponse,
+  SessionIdPayload,
+} from '@/types/api';
 import useApi from '@/hooks/useApi';
 import Loader from '@/components/Loader/Loader';
 import { ToastVariant } from '@/types/ui';
-import Modal from '@/components/Modal/ModalSuccess';
-import { API_CONFIG, ERROR_CODE, GUIDANCE_LIST } from '@/utils/config';
+
+import {
+  API_CONFIG,
+  ERROR_CODE,
+  GUIDANCE_LIST,
+  NOTIFICATION_MSG,
+  WAITLIST_CONFIG,
+} from '@/utils/config';
 interface ToastState {
   variant: ToastVariant;
   message: string;
@@ -33,17 +45,19 @@ const QueueManagement = () => {
     useQueueContext();
   const [disabledCheckin, setDisabledCheckin] = useState<boolean>(true); // for button click disabled
   const [checkinTurn, setCheckinTurn] = useState<boolean>(false);
-
   const { loading, response, fetchData } = useApi<
     APIResponse,
-    JoinWaitlistPayload | CheckinPayload
+    JoinWaitlistPayload | SessionIdPayload
   >();
 
   const [queueDiner, setQueueDiner] = useState<QueueDiner[]>([]);
   const [animateFirstRow, setAnimateFirstRow] = useState<boolean>(false);
   const [showModalSuccess, setShowModalSuccess] = useState<boolean>(false);
+  const [showModalConfirm, setShowModalConfirm] = useState<boolean>(false);
   const [availableSeat, setAvailableSeat] = useState<number>(0);
-  const [checkinTimer, setCheckinTimer] = useState<number>(0);
+  const [checkinTimer, setCheckinTimer] = useState<number>(
+    WAITLIST_CONFIG.LATE_REQUEUE,
+  );
 
   const [toastState, setToastState] = useState<ToastState>({
     message: '',
@@ -52,14 +66,32 @@ const QueueManagement = () => {
     trigger: Date.now(),
   });
 
-  const handleCloseSuccessModal = () => {
+  const handleCloseSuccessModal = useCallback(() => {
     clearSession();
     setShowModalSuccess(false);
-  };
+  }, [clearSession]);
+
+  const handleConfirmLeaveModal = useCallback(async () => {
+    await fetchData(
+      API_CONFIG.ENDPOINTS.LEAVE.replace(':sessionId', sessionId),
+      'DELETE',
+    );
+    setShowModalConfirm(false);
+  }, [fetchData, sessionId]);
+
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!sessionId) return;
+    // reset state if user already checkin but join queue again without refresh
+    setDisabledCheckin(false);
+    setCheckinTurn(false);
+    setToastState({
+      message: '',
+      variant: 'info',
+      isShow: false,
+      trigger: Date.now(),
+    });
 
     if (!socketRef.current) {
       socketRef.current = io(API_CONFIG.BASE_URL, {
@@ -74,7 +106,7 @@ const QueueManagement = () => {
 
     socket.on('connect', () => {
       console.log('connected');
-      // after connect hit rest api to update queue data
+      // After connect hit rest api to update queue data
       const payload: JoinWaitlistPayload = {
         name: name,
         partySize: partySize,
@@ -82,14 +114,12 @@ const QueueManagement = () => {
       };
 
       (async () => {
-        await fetchData('/api/join-waitlist', 'POST', payload);
+        await fetchData(API_CONFIG.ENDPOINTS.JOINWAITLIST, 'POST', payload);
       })();
     });
 
     socket.on('dinerUpdateQueueList', (data: DinerUpdateQueueListPayload) => {
-      console.log(`something happening: `, data);
       setAvailableSeat(data.availableSeats);
-
       if (data.isFirstRowRemoved) {
         // Trigger animation for the first row
         setAnimateFirstRow(true);
@@ -101,12 +131,11 @@ const QueueManagement = () => {
       } else {
         setQueueDiner(data.queueDiners);
       }
-
-      console.log(data);
     });
 
     socket.on('dinerYourTurn', () => {
       setDisabledCheckin(false);
+      setCheckinTimer(WAITLIST_CONFIG.LATE_REQUEUE);
       setCheckinTurn(true);
       socket.emit('dinnerCheckinAvailable');
     });
@@ -118,33 +147,47 @@ const QueueManagement = () => {
 
     socket.on('dinerCheckinSuccess', (serviceTime: number) => {
       setShowModalSuccess(true);
+      clearSession();
       socket.emit('dinerStartService', serviceTime);
       console.log(serviceTime);
     });
 
     socket.on('dinerTimer', (timer: number) => {
-      console.log('dinertimer', timer);
       setCheckinTimer(timer);
     });
 
     socket.on('dinerNotification', (data: DinerNotificationPayload) => {
-      console.log('diner notif', data);
-      if (data.isRemoved) {
-        setToastState({
+      // prevent notif checkin available twice
+      setToastState((prev) => {
+        const isYourTurnRepeated =
+          prev.message === NOTIFICATION_MSG.YOUR_TURN &&
+          data.message === NOTIFICATION_MSG.YOUR_TURN;
+
+        return {
+          ...prev,
           message: data.message,
-          variant: 'warning',
-          isShow: true,
-          trigger: Date.now(),
-        });
-        clearSession();
-      } else {
-        setToastState({
-          message: data.message,
-          variant: 'info',
-          isShow: true,
-          trigger: Date.now(),
-        });
-      }
+          variant: data.isWarning ? 'warning' : 'info',
+          isShow: !isYourTurnRepeated || prev.isShow,
+          trigger: isYourTurnRepeated ? prev.trigger : Date.now(),
+        };
+      });
+
+      if (data.isRemoved) clearSession();
+    });
+
+    socket.on('dinerLeaveSuccess', () => {
+      socket.disconnect();
+      clearSession();
+    });
+
+    socket.on('reconnect_failed', () => {
+      setToastState({
+        variant: 'warning',
+        message:
+          'Failed to reconnect to the server. Please try refreshing the page.',
+        isShow: true,
+        trigger: Date.now(),
+      });
     });
 
     socket.on('disconnect', () => {
@@ -154,20 +197,23 @@ const QueueManagement = () => {
     return () => {
       socket.disconnect();
       socketRef.current = null;
+      clearSession();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [clearSession, fetchData, name, partySize, sessionId]);
 
   useEffect(() => {
-    setDisabledCheckin(false);
-    if (response && !response.isSuccess) {
-      setToastState({
-        variant: 'warning',
-        message: response?.error || 'something when wrong',
-        isShow: true,
-        trigger: Date.now(),
-      });
-      console.error('Error joining waitlist:', response?.error);
+    if (response) {
+      setDisabledCheckin(false);
+      if (!response.isSuccess) {
+        setToastState({
+          variant: 'warning',
+          message: response?.error || 'something when wrong',
+          isShow: true,
+          trigger: Date.now(),
+        });
+        console.error('Error joining waitlist:', response?.error);
+      }
+
       if (response.errorCode === ERROR_CODE.UNAUTHORIZED) {
         clearSession();
       }
@@ -196,7 +242,14 @@ const QueueManagement = () => {
       {loading && <Loader />}
       {!isSubmitted && <WaitlistForm />}
 
-      {showModalSuccess && <Modal onClose={handleCloseSuccessModal} />}
+      {showModalSuccess && <ModalSuccess onClose={handleCloseSuccessModal} />}
+      {showModalConfirm && (
+        <ModalConfirm
+          onConfirm={handleConfirmLeaveModal}
+          onCancel={() => setShowModalConfirm(false)}
+          message="Are you sure you want to leave the waiting list? You’ll lose your spot and need to rejoin later if you change your mind."
+        />
+      )}
       <QueueSection>
         <QueueContainer>
           <h1>Welcome, {name}!</h1>
@@ -219,16 +272,14 @@ const QueueManagement = () => {
             </>
           )}
           <Button
-            variant="checkin"
+            variant="secondary"
             onClick={async () => {
               setDisabledCheckin(true);
-              const payload: CheckinPayload = {
+              await fetchData(API_CONFIG.ENDPOINTS.CHECKIN, 'PUT', {
                 sessionId: sessionId,
-              };
-
-              await fetchData('/api/checkin', 'PUT', payload);
+              });
             }}
-            disabled={disabledCheckin}
+            disabled={disabledCheckin || !checkinTurn}
           >
             {checkinTurn ? 'Check-in' : 'Waiting Queue...'}
           </Button>
@@ -263,7 +314,10 @@ const QueueManagement = () => {
         {isSubmitted && (
           <>
             <ButtonContainer>
-              <Button variant="leave" onClick={clearSession}>
+              <Button
+                variant="danger"
+                onClick={() => setShowModalConfirm(true)}
+              >
                 Leave WaitList
               </Button>
             </ButtonContainer>

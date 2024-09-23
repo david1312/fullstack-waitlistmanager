@@ -6,11 +6,11 @@ import {
 } from './ModalSuccess.styles';
 import eatingImg from '@/assets/gif/eating.gif';
 
-interface ModalProps {
+interface ModalSuccessProps {
   onClose: () => void;
 }
 
-const Modal = ({ onClose }: ModalProps) => {
+const ModalSuccess: React.FC<ModalSuccessProps> = ({ onClose }) => {
   return (
     <>
       <ModalOverlay />
@@ -20,7 +20,7 @@ const Modal = ({ onClose }: ModalProps) => {
           <img src={eatingImg} />
           <p>We hope you have a delightful dining experience!</p>
 
-          <Button onClick={onClose} variant="checkin">
+          <Button onClick={onClose} variant="primary">
             Close
           </Button>
         </ModalContent>
@@ -29,4 +29,4 @@ const Modal = ({ onClose }: ModalProps) => {
   );
 };
 
-export default Modal;
+export default ModalSuccess;

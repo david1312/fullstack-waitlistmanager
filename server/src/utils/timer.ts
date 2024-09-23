@@ -43,3 +43,11 @@ export const startTimer = (
   activeTimers.set(sessionId, timer);
   console.log(`Starting new timer for session: ${sessionId}`);
 };
+
+export const stopTimer = (sessionId: string) => {
+  if (activeTimers.has(sessionId)) {
+    clearTimeout(activeTimers.get(sessionId)!);
+    activeTimers.delete(sessionId);
+    console.log(`Clean up timer for session: ${sessionId}`);
+  }
+};

@@ -19,5 +19,6 @@ export interface DinerYourTurnPayload {
 
 export interface DinerNotificationPayload {
   message: string;
+  isWarning?: boolean;
   isRemoved?: boolean;
 }

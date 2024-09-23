@@ -7,8 +7,8 @@ export const Overlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-  backdrop-filter: blur(8px); /* Apply blur effect */
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   z-index: 1000;
 `;
 
@@ -59,8 +59,8 @@ export const FormContainer = styled.div`
 
     &:hover,
     &:focus {
-      border-color: var(--green); /* Green border on hover and focus */
-      outline-color: var(--green); /* Remove default outline */
+      border-color: var(--green);
+      outline-color: var(--green);
     }
   }
 `;

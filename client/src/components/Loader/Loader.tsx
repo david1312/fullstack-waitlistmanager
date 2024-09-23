@@ -1,6 +1,9 @@
 import { LoaderCircle, LoaderContainer, LoaderText } from './Loader.styles';
+interface LoaderProps {
+  text?: string;
+}
 
-const Loader: React.FC<{ text?: string }> = ({ text = 'Loading...' }) => {
+const Loader: React.FC<LoaderProps> = ({ text = 'Loading...' }) => {
   return (
     <LoaderContainer>
       <LoaderCircle />

@@ -8,6 +8,7 @@ export const config: Readonly<{
   POSTGRES_DB: string;
   POSTGRES_HOST: string;
   POSTGRES_PORT: number;
+  POSTGRES_MAX_CONN: number;
   SERVER_PORT: number;
   CORS_ORIGIN: string;
 
@@ -26,6 +27,7 @@ export const config: Readonly<{
   POSTGRES_DB: process.env.POSTGRES_DB || "",
   POSTGRES_HOST: process.env.POSTGRES_HOST || "localhost",
   POSTGRES_PORT: parseInt(process.env.POSTGRES_PORT || "5432", 10),
+  POSTGRES_MAX_CONN: 10,
   SERVER_PORT: parseInt(process.env.SERVER_PORT || "8080", 10),
   CORS_ORIGIN: process.env.CORS_ORIGIN || "*",
 
@@ -33,7 +35,7 @@ export const config: Readonly<{
   SERVICE_TIME_PER_PERSON: 3, //seconds
   RESTAURANT_CAPACITY: 10,
   NOTIF_FIRST_LATE: 10, // seconds
-  NOTIF_REQUEUE: 300, // seconds todo
+  NOTIF_REQUEUE: 20, // seconds
   REQUEUE_CHANCE: 1,
   MAX_LENGTH_NAME: 30,
   MAX_PARTY_SIZE: 10,

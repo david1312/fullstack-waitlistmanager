@@ -4,7 +4,7 @@ export interface JoinWaitlistPayload {
   partySize: number;
 }
 
-export interface CheckinPayload {
+export interface SessionIdPayload {
   sessionId: string;
 }
 

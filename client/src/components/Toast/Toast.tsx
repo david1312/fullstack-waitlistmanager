@@ -7,7 +7,10 @@ interface ToastProps {
   variant?: ToastVariant;
 }
 
-const Toast = ({ message, variant = 'info' }: ToastProps) => {
+const Toast: React.FC<ToastProps> = ({
+  message,
+  variant = 'info',
+}: ToastProps) => {
   return (
     <>
       <ToastContainer variant={variant}>{message}</ToastContainer>

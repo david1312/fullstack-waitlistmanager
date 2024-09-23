@@ -16,9 +16,9 @@ interface ToastContainerProps {
 }
 
 export const ToastContainer = styled.div<ToastContainerProps>`
-  position: absolute; /* Keeps it positioned within the parent container */
+  position: absolute;
   left: 50%;
-  transform: translateX(-50%); /* Centers the toast horizontally */
+  transform: translateX(-50%);
   background-color: ${({ variant }) => toastStyle[variant].backgroundColor};
   font-size: var(--fz-sm);
   font-weight: bold;
@@ -27,10 +27,10 @@ export const ToastContainer = styled.div<ToastContainerProps>`
   border-radius: var(--border-radius);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   z-index: 9999;
-  text-align: center; /* Optionally center the text */
+  text-align: center;
   min-width: 260px;
   opacity: 0;
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.5s ease forwards; // Animation on appear
 
   @keyframes fadeIn {
     from {
