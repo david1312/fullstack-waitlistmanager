@@ -49,7 +49,6 @@ const QueueManagement = () => {
     APIResponse,
     JoinWaitlistPayload | SessionIdPayload
   >();
-
   const [queueDiner, setQueueDiner] = useState<QueueDiner[]>([]);
   const [animateFirstRow, setAnimateFirstRow] = useState<boolean>(false);
   const [showModalSuccess, setShowModalSuccess] = useState<boolean>(false);
@@ -58,6 +57,7 @@ const QueueManagement = () => {
   const [checkinTimer, setCheckinTimer] = useState<number>(
     WAITLIST_CONFIG.LATE_REQUEUE,
   );
+  const reconnectAttempts = useRef(0);
 
   const [toastState, setToastState] = useState<ToastState>({
     message: '',
@@ -95,8 +95,8 @@ const QueueManagement = () => {
 
     if (!socketRef.current) {
       socketRef.current = io(API_CONFIG.BASE_URL, {
-        reconnectionAttempts: 10,
-        reconnectionDelay: 1000,
+        reconnectionAttempts: WAITLIST_CONFIG.WS_RECONNECT_MAX,
+        reconnectionDelay: WAITLIST_CONFIG.WS_RECONNECT_DELAY,
         query: {
           sessionId: sessionId,
         },
@@ -105,7 +105,7 @@ const QueueManagement = () => {
     const socket = socketRef.current;
 
     socket.on('connect', () => {
-      console.log('connected');
+      reconnectAttempts.current = 0;
       // After connect hit rest api to update queue data
       const payload: JoinWaitlistPayload = {
         name: name,
@@ -137,7 +137,6 @@ const QueueManagement = () => {
       setDisabledCheckin(false);
       setCheckinTimer(WAITLIST_CONFIG.LATE_REQUEUE);
       setCheckinTurn(true);
-      socket.emit('dinnerCheckinAvailable');
     });
 
     socket.on('dinerCheckinExpired', () => {
@@ -145,11 +144,9 @@ const QueueManagement = () => {
       setCheckinTurn(false);
     });
 
-    socket.on('dinerCheckinSuccess', (serviceTime: number) => {
+    socket.on('dinerCheckinSuccess', () => {
       setShowModalSuccess(true);
       clearSession();
-      socket.emit('dinerStartService', serviceTime);
-      console.log(serviceTime);
     });
 
     socket.on('dinerTimer', (timer: number) => {
@@ -157,11 +154,13 @@ const QueueManagement = () => {
     });
 
     socket.on('dinerNotification', (data: DinerNotificationPayload) => {
-      // prevent notif checkin available twice
+      // prevent notif checkin spam everytime new diner join waitlist
       setToastState((prev) => {
         const isYourTurnRepeated =
-          prev.message === NOTIFICATION_MSG.YOUR_TURN &&
-          data.message === NOTIFICATION_MSG.YOUR_TURN;
+          (prev.message === NOTIFICATION_MSG.YOUR_TURN &&
+            data.message === NOTIFICATION_MSG.YOUR_TURN) ||
+          (prev.message === NOTIFICATION_MSG.ONE_AHEAD &&
+            data.message === NOTIFICATION_MSG.ONE_AHEAD);
 
         return {
           ...prev,
@@ -180,14 +179,18 @@ const QueueManagement = () => {
       clearSession();
     });
 
-    socket.on('reconnect_failed', () => {
+    socket.on('connect_error', () => {
+      reconnectAttempts.current += 1;
       setToastState({
         variant: 'warning',
-        message:
-          'Failed to reconnect to the server. Please try refreshing the page.',
+        message: `Failed to reconnect to the server. Reconnection attempt: ${reconnectAttempts.current}`,
         isShow: true,
         trigger: Date.now(),
       });
+      if (reconnectAttempts.current >= WAITLIST_CONFIG.WS_RECONNECT_MAX) {
+        reconnectAttempts.current = 0;
+        clearSession();
+      }
     });
 
     socket.on('disconnect', () => {
@@ -252,7 +255,7 @@ const QueueManagement = () => {
       )}
       <QueueSection>
         <QueueContainer>
-          <h1>Welcome, {name}!</h1>
+          <h1 data-test="text-welcome">Welcome, {name}!</h1>
           <p>Thank you for joining the waitlist.</p>
           <h2>Guidance:</h2>
           <p>Please click "Check-in" to secure your seat.</p>
@@ -280,6 +283,7 @@ const QueueManagement = () => {
               });
             }}
             disabled={disabledCheckin || !checkinTurn}
+            dataTestId="button-checkin"
           >
             {checkinTurn ? 'Check-in' : 'Waiting Queue...'}
           </Button>
@@ -317,6 +321,7 @@ const QueueManagement = () => {
               <Button
                 variant="danger"
                 onClick={() => setShowModalConfirm(true)}
+                dataTestId="button-leave-waitlist"
               >
                 Leave WaitList
               </Button>

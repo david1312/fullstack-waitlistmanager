@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import DinerModel from "../models/Diner";
-import { config, ERROR_CODE, NOTIFICATION_MSG } from "../configs/config";
+import { config, ERROR_CODE } from "../configs/config";
 import { ErrorResponse, SuccessResponse } from "../types/response";
 import SocketClient from "../configs/socket";
 import { DinerService } from "../services/DinerService";
@@ -49,12 +49,11 @@ export const joinWaitlist = async (
     }
     // Updating queue list data across clients
     const result = await DinerService.updateQueueList(false);
-    if (sessionId === result.queueDiners[0].session_id) {
-      await DinerService.sendNotifCheckinTurn({
-        availableSeats: result.availableSeats,
-        queueDiners: result.queueDiners,
-      });
-    }
+    await DinerService.sendNotifCheckinTurn({
+      availableSeats: result.availableSeats,
+      queueDiners: result.queueDiners,
+    });
+
     res.sendStatus(200);
   } catch (error) {
     console.error("error addWaitlist:", error);
@@ -86,11 +85,8 @@ export const checkinDiner = async (
     });
 
     // notif checkin success
-    SocketClient.emitToSession(
-      sessionId,
-      "dinerCheckinSuccess",
-      checkinResult.service_time
-    );
+    SocketClient.emitToSession(sessionId, "dinerCheckinSuccess");
+    DinerService.startTimerService(sessionId, checkinResult.service_time);
     res.sendStatus(200);
   } catch (error) {
     console.error("error checkinDiner:", error);
@@ -113,7 +109,6 @@ export const leaveQueue = async (
   }
   try {
     await DinerModel.deleteDiner(sessionId);
-
     // notify next party immediately if next
     const result = await DinerService.updateQueueList(true);
     // notify next party if their next turn
@@ -126,7 +121,7 @@ export const leaveQueue = async (
     SocketClient.emitToSession(sessionId, "dinerLeaveSuccess");
     res.sendStatus(200);
   } catch (error) {
-    console.error("error leaving waitlist:", error);
+    console.error("error leaveQueue:", error);
     res.status(500).json({
       error: "Error when leaving waitlist",
       errorCode: ERROR_CODE.INTERNAL_SERVER_ERROR,

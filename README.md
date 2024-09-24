@@ -9,6 +9,8 @@ So, the user flow is as follows:
 - After joining the waitlist, they can check the app to verify if it's their turn.
 - When the table is ready for them, they check-in via the app and get seated.
 
+## How To Setup Project
+
 ## Technical Requirements
 
 ### Frontend
@@ -110,3 +112,104 @@ Your submission will be evaluated based on:
 5. Testing: Are there adequate unit tests?
 
 ### Good luck!
+
+## Setting Up and Running the Project Locally
+
+#### **Backend Setup:**
+
+1. **Navigate to the server directory**:
+
+   - From the repository root, change to the server directory:
+     ```bash
+     cd server
+     ```
+
+2. **Install dependencies**:
+
+   - Run the following command to install all necessary dependencies:
+     ```bash
+     npm install
+     ```
+
+3. **Run the database locally**:
+
+   - I’ve prepared a `docker-compose.yml` file to help you set up the local database and the database management tool. An initial migration script is also available in the `docker-entrypoint-initdb.d` folder, which will be automatically executed if you are using `docker-compose`.
+   - If you have Docker installed, simply run the following command:
+     ```bash
+     docker-compose up -d
+     ```
+   - If you don’t have Docker, you will need to set up the database manually.
+
+4. **Running the backend service**:
+
+   - First, create a `.env` file in the root of the server directory. You can refer to the `.env.example` file provided and adjust the values if necessary.
+
+   - **To run in development mode**:
+
+     ```bash
+     npm run dev
+     ```
+
+   - **To build the project**:
+
+     ```bash
+     npm run build
+     ```
+
+   - **To run the build result locally**:
+     ```bash
+     npm run start
+     ```
+
+### **Frontend Setup:**
+
+1. **Navigate to the client directory**:
+
+   - From the repository root, change to the client directory:
+     ```bash
+     cd client
+     ```
+
+2. **Install dependencies**:
+
+   - Run the following command to install all necessary dependencies:
+     ```bash
+     npm install
+     ```
+
+3. **Running the app**:
+
+   - First, create a `.env` file in the root of the client directory. You can refer to the `.env.example` file provided and adjust the values if necessary.
+   - To run the app in development mode:
+     ```bash
+     npm run dev
+     ```
+   - To build the project:
+     ```bash
+     npm run build
+     ```
+   - To run the build result locally:
+     ```bash
+     npm run preview
+     ```
+
+4. **Testing the app**:
+
+   - To run end-to-end (E2E) tests automatically:
+     ```bash
+     npm run test:e2e
+     ```
+   - For manual testing:
+     1. Run the app in development mode:
+        ```bash
+        npm run dev
+        ```
+     2. Open the Cypress interface:
+        ```bash
+        npm run cypress:open
+        ```
+   - **Note**: Ensure the backend service is running before performing the tests.
+
+### **Extra: Architecture Decisions**
+
+For more detailed explanations of the architecture decisions made for this project, please refer to the separate [ARCHITECTURE.md](./ARCHITECTURE.md) document included in this repository.

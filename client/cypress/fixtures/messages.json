@@ -1,0 +1,6 @@
+{
+  "partySizeError": "Please enter a valid party size between 1 and 10",
+  "nameError": "Please enter a name",
+  "checkinTurn": "Its your turn! Please check in now to secure your spot.",
+  "firstLateReminder": "Reminder: You havent checked in yet. Click the 'Check-in' button within 10 seconds to keep your spot."
+}

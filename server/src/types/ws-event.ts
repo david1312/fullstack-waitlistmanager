@@ -27,7 +27,7 @@ export type EventPayloadMap = {
   dinerNotification: DinerNotificationPayload;
   dinerUpdateQueueList: DinerUpdateQueueListPayload;
   dinerYourTurn?: undefined;
-  dinerCheckinSuccess: number;
+  dinerCheckinSuccess?: undefined;
   dinerTimer: number;
   dinerCheckinExpired?: undefined;
   dinerLeaveSuccess?: undefined;

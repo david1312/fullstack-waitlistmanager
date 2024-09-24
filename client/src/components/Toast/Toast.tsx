@@ -13,7 +13,9 @@ const Toast: React.FC<ToastProps> = ({
 }: ToastProps) => {
   return (
     <>
-      <ToastContainer variant={variant}>{message}</ToastContainer>
+      <ToastContainer variant={variant} data-test="toast">
+        {message}
+      </ToastContainer>
     </>
   );
 };

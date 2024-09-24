@@ -29,7 +29,11 @@ const WaitlistForm: React.FC = () => {
       setNameError(null);
     }
 
-    if (!partySize || partySize < 1) {
+    if (
+      !partySize ||
+      partySize < 1 ||
+      partySize > WAITLIST_CONFIG.MAX_PARTY_SIZE
+    ) {
       setPartySizeError(ERROR_VALIDATION.PARTY_SIZE);
       valid = false;
     } else {
@@ -77,8 +81,9 @@ const WaitlistForm: React.FC = () => {
               onChange={handleNameChange}
               maxLength={WAITLIST_CONFIG.MAX_LENGTH_NAME}
               ref={nameInputRef}
+              data-test="input-name"
             />
-            <ErrorMessage>{nameError}</ErrorMessage>
+            <ErrorMessage data-test="error-name">{nameError}</ErrorMessage>
 
             <label htmlFor="partySize">Party Size:</label>
             <input
@@ -86,11 +91,12 @@ const WaitlistForm: React.FC = () => {
               type="number"
               value={partySize || ''}
               onChange={handlePartySizeChange}
-              min={1}
-              max={WAITLIST_CONFIG.MAX_PARTY_SIZE}
+              data-test="input-size"
             />
-            <ErrorMessage>{partySizeError}</ErrorMessage>
-            <Button variant="primary">Join Waitlist</Button>
+            <ErrorMessage data-test="error-size">{partySizeError}</ErrorMessage>
+            <Button variant="primary" dataTestId="button-join-waitlist">
+              Join Waitlist
+            </Button>
           </fieldset>
         </form>
       </FormContainer>

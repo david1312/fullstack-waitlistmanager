@@ -7,6 +7,7 @@ interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  dataTestId?: string; // For testing purposes
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -14,9 +15,15 @@ const Button: React.FC<ButtonProps> = ({
   children,
   onClick,
   disabled = false,
+  dataTestId = 'button-default',
 }: ButtonProps) => {
   return (
-    <StyledButton variant={variant} onClick={onClick} disabled={disabled}>
+    <StyledButton
+      variant={variant}
+      onClick={onClick}
+      disabled={disabled}
+      data-test={dataTestId}
+    >
       {children}
     </StyledButton>
   );

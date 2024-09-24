@@ -1,4 +1,4 @@
-import { Button } from '../Button/Button.styles';
+import Button from '../Button/Button';
 import {
   ModalOverlay,
   ModalContainer,
@@ -15,12 +15,18 @@ const ModalSuccess: React.FC<ModalSuccessProps> = ({ onClose }) => {
     <>
       <ModalOverlay />
       <ModalContainer>
-        <ModalContent>
-          <h3>You've successfully checked in! We appreciate your patience.</h3>
-          <img src={eatingImg} />
+        <ModalContent data-test="modal-success-checkin">
+          <h3 data-test="text-success-checkin">
+            You've successfully checked in! We appreciate your patience.
+          </h3>
+          <img src={eatingImg} data-test="gif-success" />
           <p>We hope you have a delightful dining experience!</p>
 
-          <Button onClick={onClose} variant="primary">
+          <Button
+            onClick={onClose}
+            variant="primary"
+            dataTestId="button-close-modal"
+          >
             Close
           </Button>
         </ModalContent>

@@ -50,13 +50,13 @@ interface NotificationMsg {
 }
 
 export const NOTIFICATION_MSG: Readonly<NotificationMsg> = {
-  ONE_AHEAD: "You’re almost up! Just one party ahead of you.",
-  YOUR_TURN: "It’s your turn! Please check in now to secure your spot.",
+  ONE_AHEAD: "You are almost up! Just one party ahead of you.",
+  YOUR_TURN: "Its your turn! Please check in now to secure your spot.",
   FIRST_LATE:
-    'Reminder: You haven’t checked in yet. Click the "Check-in" button within 10 seconds to keep your spot.',
-  REQUEUE: "Your check-in time expired. You’ve been re-added to the queue.",
+    "Reminder: You havent checked in yet. Click the 'Check-in' button within 10 seconds to keep your spot.",
+  REQUEUE: "Your check-in time expired. You ve been re-added to the queue.",
   KICKED:
-    "You missed your second chance to check in. You’ve been removed from the queue.",
+    "You missed your second chance to check in. You ve been removed from the queue.",
 };
 
 // custom error code for fe handler TODO

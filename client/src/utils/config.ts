@@ -41,7 +41,7 @@ interface ErrorValidation {
 
 export const ERROR_VALIDATION: Readonly<ErrorValidation> = {
   NAME: 'Please enter a name.',
-  PARTY_SIZE: 'Please enter a valid party size of at least 1.',
+  PARTY_SIZE: 'Please enter a valid party size between 1 and 10.',
 };
 
 export const WAITLIST_CONFIG = {
@@ -50,6 +50,8 @@ export const WAITLIST_CONFIG = {
   FIRST_LATE_CHECKIN_NOTIF: 10, // seconds
   LATE_REQUEUE: 20, // seconds
   PARTY_AHEAD_NOTIF: 1,
+  WS_RECONNECT_DELAY: 5000, // 5 sec
+  WS_RECONNECT_MAX: 3,
 };
 
 interface NotificationMsg {
@@ -61,13 +63,13 @@ interface NotificationMsg {
 }
 
 export const NOTIFICATION_MSG: Readonly<NotificationMsg> = {
-  ONE_AHEAD: 'You’re almost up! Just one party ahead of you.',
-  YOUR_TURN: 'It’s your turn! Please check in now to secure your spot.',
+  ONE_AHEAD: 'You are almost up! Just one party ahead of you.',
+  YOUR_TURN: 'Its your turn! Please check in now to secure your spot.',
   FIRST_LATE:
-    'Reminder: You haven’t checked in yet. Click the "Check-in" button within 10 seconds to keep your spot.',
-  REQUEUE: 'Your check-in time expired. You’ve been re-added to the queue.',
+    "Reminder: You havent checked in yet. Click the 'Check-in' button within 10 seconds to keep your spot.",
+  REQUEUE: 'Your check-in time expired. You ve been re-added to the queue.',
   KICKED:
-    'You missed your second chance to check in. You’ve been removed from the queue.',
+    'You missed your second chance to check in. You ve been removed from the queue.',
 };
 
 export const GUIDANCE_LIST: string[] = [
