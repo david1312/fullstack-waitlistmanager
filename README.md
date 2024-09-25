@@ -9,8 +9,6 @@ So, the user flow is as follows:
 - After joining the waitlist, they can check the app to verify if it's their turn.
 - When the table is ready for them, they check-in via the app and get seated.
 
-## How To Setup Project
-
 ## Technical Requirements
 
 ### Frontend
@@ -113,6 +111,14 @@ Your submission will be evaluated based on:
 
 ### Good luck!
 
+# Additional Section
+
+## Implementation Overview
+
+For this Waitlist Manager implementation, I used React with TypeScript and Vite for the frontend, while the backend is built with Express and TypeScript. I have also covered all of the extra mile features mentioned in the README, and would like to highlight the automatic cancellation and requeue functionality. To achieve these, I implemented a system that allows for a maximum of one requeue attempt, ensuring both features are fully supported.
+
+For more detailed explanations of the architecture decisions made in this project, please refer to the separate [ARCHITECTURE.md](./ARCHITECTURE.md) document included in this repository.
+
 ## Setting Up and Running the Project Locally
 
 #### **Backend Setup:**
@@ -134,6 +140,7 @@ Your submission will be evaluated based on:
 3. **Run the database locally**:
 
    - I’ve prepared a `docker-compose.yml` file to help you set up the local database and the database management tool. An initial migration script is also available in the `docker-entrypoint-initdb.d` folder, which will be automatically executed if you are using `docker-compose`.
+   - The `docker-compose.yml` also includes Adminer, a lightweight database management tool that you can use to inspect the database via a web interface. If you prefer to use your own database management tool, feel free to comment out or remove Adminer from the `docker-compose.yml` file.
    - If you have Docker installed, simply run the following command:
      ```bash
      docker-compose up -d
@@ -159,6 +166,13 @@ Your submission will be evaluated based on:
    - **To run the build result locally**:
      ```bash
      npm run start
+     ```
+
+5. **Testing the service**:
+
+   - To run unit tests for the backend service, use the following command:
+     ```bash
+     npm run test
      ```
 
 ### **Frontend Setup:**
@@ -208,8 +222,4 @@ Your submission will be evaluated based on:
         ```bash
         npm run cypress:open
         ```
-   - **Note**: Ensure the backend service is running before performing the tests.
-
-### **Extra: Architecture Decisions**
-
-For more detailed explanations of the architecture decisions made for this project, please refer to the separate [ARCHITECTURE.md](./ARCHITECTURE.md) document included in this repository.
+   - **Note**: Ensure the backend service is running before performing the end to end testing.

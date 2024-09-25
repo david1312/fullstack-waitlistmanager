@@ -14,3 +14,13 @@ export interface QueueDinerResponse {
   party_size: number;
   queue_time: Date;
 }
+
+export interface SessionIdPayload {
+  sessionId: string;
+}
+
+export interface JoinWaitlistPayload {
+  sessionId: string;
+  name: string;
+  partySize: number;
+}

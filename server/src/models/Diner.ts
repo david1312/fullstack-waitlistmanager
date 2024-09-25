@@ -1,29 +1,14 @@
 import Database from "../configs/db";
 import { PoolClient } from "pg";
-import { Diner } from "../types/schema";
+import {
+  AddDinerPayload,
+  Diner,
+  DinerCheckInResponse,
+  UpdateDinerQueueTimePayload,
+} from "../types/schema";
 import { config } from "../configs/config";
-import { QueueDinerResponse } from "../types/response";
+import { QueueDinerResponse } from "../types/rest";
 
-type DinerStatus = "queue" | "diner";
-
-interface AddDinerPayload {
-  session_id: string;
-  name: string;
-  party_size: number;
-  status: DinerStatus;
-  queue_time: Date;
-  service_time: number;
-}
-
-interface UpdateQueueTimePayload {
-  session_id: string;
-  queue_time: Date;
-  queue_counter: number;
-}
-
-interface CheckInResponse {
-  service_time: number;
-}
 class DinerModel {
   static async addDiner(diner: AddDinerPayload) {
     const db = Database.getInstance();
@@ -49,13 +34,7 @@ class DinerModel {
 
   static async checkSessionIdExist(sessionId: string): Promise<boolean> {
     const db = Database.getInstance();
-    const query = `
-      SELECT EXISTS (
-        SELECT session_id 
-        FROM diners 
-        WHERE session_id = $1
-      );
-    `;
+    const query = `SELECT EXISTS (SELECT session_id FROM diners WHERE session_id = $1)`;
 
     try {
       const result = await db.query(query, [sessionId]);
@@ -80,11 +59,7 @@ class DinerModel {
 
   static async getTotalCheckedInPartySize(): Promise<number> {
     const db = Database.getInstance();
-    const query = `
-      SELECT SUM(party_size) AS total_party_size 
-      FROM diners 
-      WHERE status = 'diner';
-    `;
+    const query = `SELECT SUM(party_size) AS total_party_size FROM diners WHERE status = 'diner'`;
 
     try {
       const result = await db.query(query);
@@ -94,12 +69,9 @@ class DinerModel {
     }
   }
 
-  static async updateQueueTime(payload: UpdateQueueTimePayload) {
+  static async updateQueueTime(payload: UpdateDinerQueueTimePayload) {
     const db = Database.getInstance();
-    const query = `
-          UPDATE diners set queue_time = $1, queue_counter = $2
-          where session_id = $3 and status ='queue'
-        `;
+    const query = `UPDATE diners set queue_time = $1, queue_counter = $2 where session_id = $3 and status ='queue'`;
     const values = [
       payload.queue_time,
       payload.queue_counter,
@@ -113,18 +85,14 @@ class DinerModel {
     }
   }
 
-  static async getQueueCounter(sessionId: string): Promise<number | null> {
+  static async getQueueCounter(sessionId: string): Promise<number> {
     const db = Database.getInstance();
-    const query = `
-      SELECT queue_counter 
-      FROM diners 
-      WHERE session_id = $1
-    `;
+    const query = `SELECT queue_counter FROM diners WHERE session_id = $1`;
 
     try {
       const result = await db.query(query, [sessionId]);
       if (result.rows.length === 0) {
-        return null; // No diner found with this session_id
+        return 0; // No diner found with this session_id
       }
       return result.rows[0].queue_counter; // Return the queue_counter
     } catch (error) {
@@ -142,12 +110,7 @@ class DinerModel {
 
       // Lock the row and check if the diner is still in 'queue'
       const dinerResult = await client.query(
-        `
-        SELECT status 
-        FROM diners 
-        WHERE session_id = $1 
-        FOR UPDATE
-      `,
+        `SELECT status FROM diners WHERE session_id = $1 FOR UPDATE`,
         [sessionId]
       );
 
@@ -159,20 +122,15 @@ class DinerModel {
 
       // Only delete if the diner is still in 'queue'
       if (diner.status === "queue") {
-        await client.query(
-          `
-          DELETE FROM diners 
-          WHERE session_id = $1
-        `,
-          [sessionId]
-        );
+        await client.query(`DELETE FROM diners  WHERE session_id = $1`, [
+          sessionId,
+        ]);
         console.log(`Diner with session ID ${sessionId} has been deleted.`);
       } else {
         console.log(
           `Diner with session ID ${sessionId} is not in 'queue', skipping deletion.`
         );
       }
-
       await client.query("COMMIT"); // Commit transaction
     } catch (error) {
       await client.query("ROLLBACK"); // Rollback transaction on error
@@ -182,20 +140,14 @@ class DinerModel {
     }
   }
 
-  static async checkInDiner(session_id: string): Promise<CheckInResponse> {
+  static async checkInDiner(session_id: string): Promise<DinerCheckInResponse> {
     const db = Database.getInstance();
     const client: PoolClient = await db.connect(); // Get a client for transactions
     try {
       await client.query("BEGIN");
-
       // Lock the row for this diner to prevent concurrent updates
       const dinerResult = await client.query(
-        `
-        SELECT party_size
-        FROM diners 
-        WHERE session_id = $1 
-        FOR UPDATE
-      `,
+        `SELECT party_size FROM diners WHERE session_id = $1 FOR UPDATE`,
         [session_id]
       );
 
@@ -207,10 +159,7 @@ class DinerModel {
 
       // Get the total current party size of all diners with status 'diner'
       const availableSeatsQuery = `
-        SELECT SUM(party_size) AS total_party_size 
-        FROM diners 
-        WHERE status = 'diner';
-      `;
+        SELECT SUM(party_size) AS total_party_size FROM diners WHERE status = 'diner'`;
       const availableSeatsResult = await client.query(availableSeatsQuery);
       const currentPartySize = parseInt(
         availableSeatsResult.rows[0].total_party_size || "0",
@@ -225,12 +174,7 @@ class DinerModel {
       }
 
       // Update diner status to "diner"
-      const updateDinerQuery = `
-        UPDATE diners
-        SET status = 'diner', check_in_time = NOW()
-        WHERE session_id = $1 
-        RETURNING service_time;
-      `;
+      const updateDinerQuery = `UPDATE diners SET status = 'diner', check_in_time = NOW() WHERE session_id = $1 RETURNING service_time`;
       const updateResult = await client.query(updateDinerQuery, [session_id]);
 
       await client.query("COMMIT"); // Commit transaction
@@ -248,10 +192,7 @@ class DinerModel {
   // handle deletion after checkin & on leave waitlist
   static async deleteDiner(sessionId: string) {
     const db = Database.getInstance();
-    const query = `
-          DELETE FROM diners  
-          WHERE session_id = $1
-        `;
+    const query = `DELETE FROM diners WHERE session_id = $1`;
     try {
       await db.query(query, [sessionId]);
     } catch (error) {

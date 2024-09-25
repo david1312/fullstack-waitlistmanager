@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "commonjs", // CommonJS is required for Jest
+    "esModuleInterop": true, // Allows compatibility between ES modules and CommonJS
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"] // Includes Jest types
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

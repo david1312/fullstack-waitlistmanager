@@ -171,7 +171,10 @@ const QueueManagement = () => {
         };
       });
 
-      if (data.isRemoved) clearSession();
+      if (data.isRemoved) {
+        setShowModalConfirm(false);
+        clearSession();
+      }
     });
 
     socket.on('dinerLeaveSuccess', () => {

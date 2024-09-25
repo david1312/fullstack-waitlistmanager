@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-describe('Test Form Validation', () => {
+describe('Form Validation Functionality', () => {
   beforeEach(function () {
     // Load the fixture with messages and alias it
     cy.fixture('messages.json').as('messages');

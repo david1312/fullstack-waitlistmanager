@@ -1,18 +1,14 @@
 import { Request, Response } from "express";
 import DinerModel from "../models/Diner";
 import { config, ERROR_CODE } from "../configs/config";
-import { ErrorResponse, SuccessResponse } from "../types/response";
+import {
+  ErrorResponse,
+  JoinWaitlistPayload,
+  SessionIdPayload,
+  SuccessResponse,
+} from "../types/rest";
 import SocketClient from "../configs/socket";
 import { DinerService } from "../services/DinerService";
-interface JoinWaitlistPayload {
-  sessionId: string;
-  name: string;
-  partySize: number;
-}
-
-interface SessionIdPayload {
-  sessionId: string;
-}
 
 export const joinWaitlist = async (
   req: Request<{}, {}, JoinWaitlistPayload>,

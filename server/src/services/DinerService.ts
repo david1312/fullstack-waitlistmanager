@@ -1,7 +1,7 @@
 import DinerModel from "../models/Diner";
 import { config, NOTIFICATION_MSG } from "../configs/config";
 import SocketClient from "../configs/socket";
-import { QueueDinerResponse } from "../types/response";
+import { QueueDinerResponse } from "../types/rest";
 import { startTimer } from "../utils/timer";
 
 interface sendNotifCheckinPayload {
@@ -72,8 +72,7 @@ export class DinerService {
       async () => {
         try {
           const queueCounter = await DinerModel.getQueueCounter(sessionId);
-          let isRemoved =
-            (queueCounter && queueCounter >= config.REQUEUE_CHANCE) || false;
+          let isRemoved = queueCounter >= config.REQUEUE_CHANCE;
           let message = isRemoved
             ? NOTIFICATION_MSG.KICKED
             : NOTIFICATION_MSG.REQUEUE;
@@ -132,6 +131,9 @@ export class DinerService {
   }
 
   static async startTimerService(sessionId: string, serviceTime: number) {
+    console.log(
+      `start counting service timer for party: ${sessionId} with (${serviceTime}) seconds`
+    );
     startTimer(
       sessionId,
       serviceTime,

@@ -20,12 +20,20 @@ const ModalConfirm: React.FC<ModalConfirmProps> = ({
   return (
     <ModalContainer>
       <ModalContent>
-        <p>{message}</p>
+        <p data-test="text-modal-confirm">{message}</p>
         <ButtonContainer>
-          <Button onClick={onCancel} variant="danger">
+          <Button
+            onClick={onCancel}
+            variant="danger"
+            dataTestId="button-cancel-leave"
+          >
             Cancel
           </Button>
-          <Button onClick={onConfirm} variant="primary">
+          <Button
+            onClick={onConfirm}
+            variant="primary"
+            dataTestId="button-confirm-leave"
+          >
             Confirm
           </Button>
         </ButtonContainer>

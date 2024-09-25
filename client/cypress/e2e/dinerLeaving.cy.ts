@@ -1,12 +1,12 @@
 /// <reference types="cypress" />
 
-describe('Test Diner Checkin Positive Scenario 1 person', () => {
+describe('Diner Leaving', () => {
   beforeEach(function () {
     cy.fixture('messages.json').as('messages');
     cy.visit('http://localhost:5173');
   });
 
-  it('should submit the form with valid inputs', function () {
+  it('should user be able to leave the queue, and test functionality cancel and confirm leave button', function () {
     // check element
     cy.get('[data-test="input-name"]').should('exist'); // Name input
     cy.get('[data-test="input-size"]').should('exist'); // Party size input
@@ -18,20 +18,33 @@ describe('Test Diner Checkin Positive Scenario 1 person', () => {
     cy.get('[data-test="button-join-waitlist"]').click();
 
     // Check element
-    cy.get('[data-test="toast"]')
-      .should('be.visible')
-      .and('contain', this.messages.checkinTurn);
     cy.get('[data-test="text-welcome"]').should('exist');
     cy.get('[data-test="button-leave-waitlist"]').should('exist');
     cy.get('[data-test="button-checkin"]').should('exist').should('be.enabled');
 
-    // Diner Checkin
-    cy.get('[data-test="button-checkin"]').click();
-    cy.get('[data-test="modal-success-checkin"]').should('exist');
-    cy.get('[data-test="text-success-checkin"]').should('exist');
-    cy.get('[data-test="gif-success"]').should('exist');
+    // Diner click cutton leave waitlist then cancel
+    cy.get('[data-test="button-leave-waitlist"]').click();
+    cy.get('[data-test="text-modal-confirm"]').should('exist');
+    cy.get('[data-test="button-confirm-leave"]')
+      .should('exist')
+      .should('be.enabled');
+    cy.get('[data-test="button-cancel-leave"]')
+      .should('exist')
+      .should('be.enabled')
+      .click();
 
-    cy.get('[data-test="button-close-modal"]')
+    // Recheck element
+    cy.get('[data-test="text-welcome"]').should('exist');
+    cy.get('[data-test="button-leave-waitlist"]').should('exist');
+    cy.get('[data-test="button-checkin"]').should('exist').should('be.enabled');
+
+    // Diner click cutton leave waitlist then confirm
+    cy.get('[data-test="button-leave-waitlist"]').click();
+    cy.get('[data-test="text-modal-confirm"]').should('exist');
+    cy.get('[data-test="button-cancel-leave"]')
+      .should('exist')
+      .should('be.enabled');
+    cy.get('[data-test="button-confirm-leave"]')
       .should('exist')
       .should('be.enabled')
       .click();

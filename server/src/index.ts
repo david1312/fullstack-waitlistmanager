@@ -32,7 +32,7 @@ server.listen(config.SERVER_PORT, async () => {
 // Graceful Shutdown
 const shutdown = () => {
   console.log("Gracefully shutting down...");
-  setTimeout(() => {
+  setTimeout(async () => {
     server.close(async (err) => {
       if (err) {
         console.error("Error while shutting down server:", err);
