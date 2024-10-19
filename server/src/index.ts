@@ -50,5 +50,5 @@ const shutdown = () => {
 };
 
 // Listen for termination signals
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);

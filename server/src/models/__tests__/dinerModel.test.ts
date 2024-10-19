@@ -1,4 +1,4 @@
-import DinerModel from "../Diner";
+import DinerModel from "../dinerModel";
 import Database from "../../configs/db"; // This is your database configuration file
 import {
   AddDinerPayload,

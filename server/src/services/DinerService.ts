@@ -1,4 +1,4 @@
-import DinerModel from "../models/Diner";
+import DinerModel from "../models/dinerModel";
 import { config, NOTIFICATION_MSG } from "../configs/config";
 import SocketClient from "../configs/socket";
 import { QueueDinerResponse } from "../types/rest";

@@ -4,8 +4,8 @@ import {
   leaveQueue,
 } from "../../controllers/dinerController";
 import { Request, Response } from "express";
-import DinerModel from "../../models/Diner";
-import { DinerService } from "../../services/DinerService";
+import DinerModel from "../../models/dinerModel";
+import { DinerService } from "../../services/dinerService";
 import SocketClient from "../../configs/socket";
 import { config, ERROR_CODE } from "../../configs/config";
 import { SessionIdPayload } from "../../types/rest";

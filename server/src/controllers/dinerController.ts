@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import DinerModel from "../models/Diner";
+import DinerModel from "../models/dinerModel";
 import { config, ERROR_CODE } from "../configs/config";
 import {
   ErrorResponse,
@@ -8,7 +8,7 @@ import {
   SuccessResponse,
 } from "../types/rest";
 import SocketClient from "../configs/socket";
-import { DinerService } from "../services/DinerService";
+import { DinerService } from "../services/dinerService";
 
 export const joinWaitlist = async (
   req: Request<{}, {}, JoinWaitlistPayload>,
